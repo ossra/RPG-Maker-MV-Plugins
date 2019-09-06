@@ -2,7 +2,7 @@
 // █▐▐  Basic Shadows
 // ╞══════════════════════════════════════════════════════════════════════════════════╡
 /*:
- *  @plugindesc [1.04] Adds basic shadows to characters, events, and vehicles.
+ *  @plugindesc [1.06] Adds basic shadows to characters, events, and vehicles.
  *  @author Exhydra
  *
  *  @param ─ Shadow Options
@@ -168,9 +168,9 @@
  *  @help
  * ▄ Plugin                  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▄ ▄
  *
- *   ┌─ Version : 1.04
+ *   ┌─ Version : 1.06
  *   ├─ Release : 27rd August 2016
- *   ├─ Updated : 7th  September 2016
+ *   ├─ Updated : 5th  September 2019
  *   └─ License : Free for Commercial and Non-Commercial Usage
  *
  * ▄ Comment/Note Tags       ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▄ ▄
