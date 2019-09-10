@@ -111,42 +111,6 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-  (function($) {                                                                     // {
-
-  // +=================================================|                      Functions |
-  // | [Plugin] Functions
-  // +==================================================================================+
-
-  // +----------------------------------------------------------------------------------+
-  // | [Method] between
-  // +----------------------------------------------------------------------------------+
-
-    $.between = function(a, b) {
-      var min = Math.min(a, b),
-          max = Math.max(a, b);
-
-      return this > min && this < max;
-    }; // Functions << between
-
-  // +----------------------------------------------------------------------------------+
-  // | [Method] createColorObject
-  // +----------------------------------------------------------------------------------+
-
-    $.createColorObject = function (data) {
-      var obj = { hex: 0, array: [0,0,0,255] };
-
-      obj.hex = parseInt('0x' + data);
-      obj.array = data.length === 3 ? data.match(/.{1}/g) : data.match(/.{2}/g);
-      obj.array = obj.array.map(function(color) { return parseInt('0x' + color); });
-      obj.array.push(255);
-
-      return obj;
-    }; // Functions << createColorObject
-
-  })(ossFunc);                                                                       // }
-
-
-
   (function() {                                                                      // {
 
   // +=================================================|                      Functions |
