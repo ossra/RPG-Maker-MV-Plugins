@@ -42,9 +42,9 @@
  *   | Resets the position of the choice list on the screen.
  *   |--------------------------------------------------------------------------|
  *
- *  (+) ossra ChoiceList setLayout horizontal rows columns retain
+ *  (+) ossra ChoiceList setLayout align rows columns retain
  *   |--------------------------------------------------------------------------|
- *   | Set the layout of the choice list to horizontal.
+ *   | Set the layout of the choice list.
  *   |--------------------------------------------------------------------------|
  *   | < Name >        < Type >        < Note >
  *   | align           String          Aligns text to left, center, or right
