@@ -152,7 +152,7 @@ Ossra.Command  = Ossra.Command  || [];
   // +----------------------------------------------------------------------------------+
     function parseAllParameters (input) {
 
-      for (var [key, value] of Object.entries(input)) {
+      Object.entries(input).forEach(function([key, value]) {
         try {
           input[key] = JSON.parse(value);
 
@@ -160,7 +160,7 @@ Ossra.Command  = Ossra.Command  || [];
         } catch (e) {
 
         }
-      }
+      });
 
       return input;
 
@@ -172,7 +172,7 @@ Ossra.Command  = Ossra.Command  || [];
 
     function parseDefaultData (input, defaults, output) {
 
-      for (var [key, value] of Object.entries(defaults)) {
+      Object.entries(input).forEach(function([key, value]) {
         var _key     = key.split(' ');
         _key[0]      = _key[0].toLowerCase();
         _key         = _key.join('');
@@ -198,7 +198,7 @@ Ossra.Command  = Ossra.Command  || [];
             }
             break;
         }
-      }
+      });
 
       return output;
 
@@ -243,14 +243,14 @@ Ossra.Command  = Ossra.Command  || [];
         Ossra.Share.pluginCommand.call(this, command, args);
 
         if (command === 'ossra') {
-          var path = Ossra.Command.find(function(command) {
+          var path = Ossra.Command.filter(function(command) {
             return command.plugin === args[0] && command.name === args[1];
           });
 
           if (path) {
-            var group  = path.group;
-            var plugin = path.plugin;
-            var name   = path.name;
+            var group  = path[0].group;
+            var plugin = path[0].plugin;
+            var name   = path[0].name;
             var func   = Ossra.Plugin[group][plugin]['Command'][name];
 
             if (typeof func !== 'undefined') {
@@ -402,7 +402,7 @@ Ossra.Command  = Ossra.Command  || [];
 
       $win.updatePlacement.call(this);
 
-      var override = $gameMessage.__choicePositionOverride;
+      var override = $gameMessage.getPositionOverride();
 
       if (override.enable) {
         this.x = override.point.x;
