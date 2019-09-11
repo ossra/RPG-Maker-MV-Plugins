@@ -41,6 +41,20 @@
  *   |--------------------------------------------------------------------------|
  *   | Resets the position of the choice list on the screen.
  *   |--------------------------------------------------------------------------|
+ *
+ *  (+) ossra ChoiceList setHorzLayout columns retain
+ *   |--------------------------------------------------------------------------|
+ *   | Set the layout of the choice list to horizontal.
+ *   |--------------------------------------------------------------------------|
+ *   | < Name >        < Type >        < Note >
+ *   | columns         Integer
+ *   | retain          Boolean         Uses current layout until cleared
+ *   |--------------------------------------------------------------------------|
+ *
+ *  (+) ossra ChoiceList clearHorzLayout
+ *   |--------------------------------------------------------------------------|
+ *   | Resets the layout of the choice list to vertical.
+ *   |--------------------------------------------------------------------------|
  */
 // +====================================================================================+
 
@@ -192,7 +206,7 @@ Ossra.Command  = Ossra.Command  || [];
         var y      = Number(args[1]);
         var retain = args[2] ? args[2] === 'true' : false;
 
-        $gameMessage.setPositionOverride(x, y, retain);
+        $gameMessage.setPointOverride(true, x, y, retain);
 
       }
 
@@ -206,9 +220,40 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.clearPosition = function(args, interpreter) {
 
-      $gameMessage.clearPositionOverride();
+      $gameMessage.setPointOverride(false, 0, 0, false);
 
     }; // Commands ‹‹ clearPosition
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] setHorzLayout
+  // +----------------------------------------------------------------------------------+
+
+    registerPluginCommand('setHorzLayout');
+
+    $.setHorzLayout = function(args, interpreter) {
+
+      if (args.length >= 1) {
+
+        var columns = Number(args[0]);
+        var retain  = args[1] ? args[1] === 'true' : false;
+
+        $gameMessage.setLayoutOverride(true, columns, retain);
+
+      }
+
+    }; // Commands ‹‹ setHorzLayout
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] clearHorzLayout
+  // +----------------------------------------------------------------------------------+
+
+    registerPluginCommand('clearHorzLayout');
+
+    $.clearHorzLayout = function(args, interpreter) {
+
+      $gameMessage.setLayoutOverride(false, 0, false);
+
+    }; // Commands ‹‹ clearHorzLayout
 
   })(ossCommand);                                                                    // }
 
@@ -232,46 +277,66 @@ Ossra.Command  = Ossra.Command  || [];
 
       $obj.initialize.call(this);
 
-      this.clearPositionOverride();
+      this.initOverride();
 
     }; // Game_Message << initialize
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] setPositionOverride
+  // | [Method] setPointOverride
   // +----------------------------------------------------------------------------------+
 
-    $.prototype.setPositionOverride = function(x, y, retain) {
+    $.prototype.setPointOverride = function(enable, x, y, retain) {
 
-      this.__choicePositionOverride.enable = true;
-      this.__choicePositionOverride.retain = retain;
-      this.__choicePositionOverride.point.x = x;
-      this.__choicePositionOverride.point.y = y;
+      this.__choiceOverride.point.enable = enable;
+      this.__choiceOverride.point.retain = retain;
+      this.__choiceOverride.point.x = x;
+      this.__choiceOverride.point.y = y;
 
-    }; // Game_Message << setPositionOverride
+    }; // Game_Message << setPointOverride
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] getPositionOverride
+  // | [Method] setLayoutOverride
   // +----------------------------------------------------------------------------------+
 
-    $.prototype.getPositionOverride = function() {
+    $.prototype.setLayoutOverride = function(enable, columns, retain) {
 
-      return this.__choicePositionOverride;
+      this.__choiceOverride.layout.enable  = enable;
+      this.__choiceOverride.layout.retain  = retain;
+      this.__choiceOverride.layout.columns = columns;
 
-    }; // Game_Message << getPositionOverride
+    }; // Game_Message << setLayoutOverride
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] clearPositionOverride
+  // | [Method] getChoiceOverride
   // +----------------------------------------------------------------------------------+
 
-    $.prototype.clearPositionOverride = function() {
+    $.prototype.getChoiceOverride = function() {
 
-      this.__choicePositionOverride = {
-        enable: false,
-        retain: false,
-        point: { x: 0, y: 0 }
+      return this.__choiceOverride;
+
+    }; // Game_Message << getChoiceOverride
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] initOverride
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.initOverride = function() {
+
+      this.__choiceOverride = {
+        point: {
+          enable: false,
+          retain: false,
+          x: 0,
+          y: 0
+        },
+        layout: {
+          enable: false,
+          retain: false,
+          columns: 0
+        }
       };
 
-    }; // Game_Message << clearPositionOverride
+    }; // Game_Message << initOverride
 
   })(Game_Message);                                                                  // }
 
@@ -286,6 +351,34 @@ Ossra.Command  = Ossra.Command  || [];
     var $win = setNamespace(ossObject, 'Window_ChoiceList');
 
   // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] initialize
+  // +----------------------------------------------------------------------------------+
+    
+    $win.initialize = $.prototype.initialize;
+
+    $.prototype.initialize = function(messageWindow) {
+      
+      this.__choiceOverride = $gameMessage.getChoiceOverride();
+
+      $win.initialize.call(this, messageWindow);
+
+    }; // Window_ChoiceList << initialize
+    
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] start
+  // +----------------------------------------------------------------------------------+
+
+    $win.start = $.prototype.start;
+
+    $.prototype.start = function() {
+
+      this.__choiceOverride = $gameMessage.getChoiceOverride();
+    
+      $win.start.call(this);
+
+    }; // Window_ChoiceList << start
+
+  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updatePlacement
   // +----------------------------------------------------------------------------------+
 
@@ -295,18 +388,115 @@ Ossra.Command  = Ossra.Command  || [];
 
       $win.updatePlacement.call(this);
 
-      var override = $gameMessage.getPositionOverride();
-
-      if (override.enable) {
-        this.x = override.point.x;
-        this.y = override.point.y;
-
-        if (!override.retain) {
-          $gameMessage.clearPositionOverride();
-        }
+      if (this.__choiceOverride.point.enable) {
+        this.x = this.__choiceOverride.point.x;
+        this.y = this.__choiceOverride.point.y;
       }
 
     }; // Window_ChoiceList << updatePlacement
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] numVisibleRows
+  // +----------------------------------------------------------------------------------+
+
+    $win.numVisibleRows = $.prototype.numVisibleRows;
+
+    $.prototype.numVisibleRows = function() {
+
+      if (this.__choiceOverride.layout.enable) {
+        return 1;
+      } else {
+        return $win.numVisibleRows.call(this);
+      }
+
+    }; // Window_ChoiceList << numVisibleRows
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] maxCols
+  // +----------------------------------------------------------------------------------+
+
+    $win.maxCols = $.prototype.maxCols;
+
+    $.prototype.maxCols = function() {
+
+      if (this.__choiceOverride.layout.enable) {
+        return this.__choiceOverride.layout.columns;
+      } else {
+        return $win.maxCols.call(this);
+      }
+
+    }; // Window_ChoiceList << maxCols
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] itemTextAlign
+  // +----------------------------------------------------------------------------------+
+
+    $win.itemTextAlign = $.prototype.itemTextAlign;
+
+    $.prototype.itemTextAlign = function() {
+
+      if (this.__choiceOverride.layout.enable) {
+        return 'center';
+      } else {
+        return $win.itemTextAlign.call(this);
+      }
+
+    }; // Window_ChoiceList << itemTextAlign
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] windowWidth
+  // +----------------------------------------------------------------------------------+
+
+    $win.windowWidth = $.prototype.windowWidth;
+
+    $.prototype.windowWidth = function() {
+
+      if (this.__choiceOverride.layout.enable) {
+        var width = this.maxChoiceWidth() * this.maxCols() + this.padding * 2;
+
+        return width;
+      } else {
+        return $win.windowWidth.call(this);
+      }
+
+
+    }; // Window_ChoiceList << windowWidth
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] drawItem
+  // +----------------------------------------------------------------------------------+
+
+    $win.drawItem = $.prototype.drawItem;
+
+    $.prototype.drawItem = function(index) {
+
+      if (this.__choiceOverride.layout.enable) {
+        Window_Command.prototype.drawItem.call(this, index);
+      } else {
+        $win.drawItem.call(this, index);
+      }
+
+    }; // Window_ChoiceList << drawItem
+    
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] close
+  // +----------------------------------------------------------------------------------+
+
+    $win.close = $.prototype.close;
+
+    $.prototype.close = function() {
+
+      if (!this.__choiceOverride.point.retain) {
+        $gameMessage.setPointOverride(false, 0, 0, false);
+      }
+
+      if (!this.__choiceOverride.layout.retain) {
+        $gameMessage.setLayoutOverride(false, 0, false);
+      }
+
+      $win.close.call(this);
+
+    }; // Window_ChoiceList << close
 
   })(Window_ChoiceList);                                                             // }
 
