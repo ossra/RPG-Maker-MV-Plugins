@@ -152,7 +152,10 @@ Ossra.Command  = Ossra.Command  || [];
   // +----------------------------------------------------------------------------------+
     function parseAllParameters (input) {
 
-      Object.entries(input).forEach(function([key, value]) {
+      Object.entries(input).forEach(function(param) {
+        var key   = param[0];
+        var value = param[1];
+
         try {
           input[key] = JSON.parse(value);
 
@@ -172,7 +175,9 @@ Ossra.Command  = Ossra.Command  || [];
 
     function parseDefaultData (input, defaults, output) {
 
-      Object.entries(input).forEach(function([key, value]) {
+      Object.entries(input).forEach(function(param) {
+        var key      = param[0];
+        var value    = param[1];
         var _key     = key.split(' ');
         _key[0]      = _key[0].toLowerCase();
         _key         = _key.join('');
