@@ -2,7 +2,7 @@
 // |||  Character | Comment Options
 // +====================================================================================+
 /*:
- * @plugindesc [1.10] Options to apply various properties to events.
+ * @plugindesc [1.11] Options to apply various properties to events.
  * @author Ossra
  *
  * @param Plugin Data
@@ -20,10 +20,21 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.10
+ *   - Version : 1.11
  *   - Release : 24rd July 2016
  *   - Updated : 12th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
+ *
+ * ==| Comment Tags            |=================================================
+ *
+ *  (+) <ossra CommentOptions set property: value>
+ *   |--------------------------------------------------------------------------|
+ *   | Set the position of the choice list on the screen.
+ *   |--------------------------------------------------------------------------|
+ *   | < Name >        < Type >        < Note >
+ *   | property        String
+ *   | value           Any
+ *   |--------------------------------------------------------------------------|
  */
 // +====================================================================================+
 
@@ -153,11 +164,13 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.__processComment = function(property, value) {
 
-      var property    = this['_' + property] ? '_' + property : property;
-      var constructor = this[property].constructor;
-      var value       = constructor(value);
+      var property = this.hasOwnProperty('_' + property) ? '_' + property : property;
 
-      this[property]  = value;
+      try {
+        this[property] = JSON.parse(value);
+      } catch (error) {
+        this[property] = value;
+      }
 
     }; // Game_Event << __processComment
 
@@ -165,7 +178,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Character.CommentOptions', 1.10);                                                // }
+})('Character.CommentOptions', 1.11);                                                // }
 
 
 
