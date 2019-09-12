@@ -173,7 +173,7 @@ Ossra.Command  = Ossra.Command  || [];
         for (var i = 0; i < property.length; i++) {
           var prop = property[i];
           var prop = this.hasOwnProperty('_' + prop) ? '_' + prop : prop;
-console.log(prop, value);
+
           try {
             this[prop] = JSON.parse(value[i]);
           } catch (error) {
