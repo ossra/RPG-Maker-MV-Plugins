@@ -2,7 +2,7 @@
 // |||  Character | Comment Options
 // +====================================================================================+
 /*:
- * @plugindesc [1.11] Options to apply various properties to events.
+ * @plugindesc [1.13] Options to apply various properties to events.
  * @author Ossra
  *
  * @param Plugin Data
@@ -20,7 +20,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.11
+ *   - Version : 1.13
  *   - Release : 24rd July 2016
  *   - Updated : 12th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -28,6 +28,7 @@
  * ==| Comment Tags            |=================================================
  *
  *  (+) <ossra CommentOptions set property: value>
+ *  (+) <ossra CommentOptions set property,property: value,value>
  *   |--------------------------------------------------------------------------|
  *   | Set the position of the choice list on the screen.
  *   |--------------------------------------------------------------------------|
@@ -133,52 +134,62 @@ Ossra.Command  = Ossra.Command  || [];
       $obj.refresh.call(this);
 
       if (oldPageIndex !== newPageIndex) {
-        this.__setupComments();
+        ossFunc.setupComments.call(this);
       }
 
     }; // Game_Event << refresh
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] __setupComments
+  // | [Method] setupComments
   // +----------------------------------------------------------------------------------+
 
-    $.prototype.__setupComments = function() {
+    ossFunc.setupComments = function() {
 
       if (this.page()) {
 
         this.page().list.forEach(function(data) {
           if (data.code == 108 || data.code == 408) {
-            if (/<ossra CommentOptions set (\w+):\s?(.*)>/i.test(data.parameters[0])) {
-              this.__processComment(RegExp.$1, RegExp.$2);
+            if (/<ossra CommentOptions set (.*):\s?(.*)>/i.test(data.parameters[0])) {
+              ossFunc.processComment.call(this, RegExp.$1, RegExp.$2);
             }
           }
         }, this);
 
       }
 
-    }; // Game_Event << __setupComments
+    }; // Game_Event << setupComments
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] __processComment
+  // | [Method] processComment
   // +----------------------------------------------------------------------------------+
 
-    $.prototype.__processComment = function(property, value) {
+    ossFunc.processComment = function(property, value) {
 
-      var property = this.hasOwnProperty('_' + property) ? '_' + property : property;
+      property = property.split(',');
+      value    = value.split(',');
 
-      try {
-        this[property] = JSON.parse(value);
-      } catch (error) {
-        this[property] = value;
+      if (property.length === value.length) {
+
+        for (var i = 0; i < property.length; i++) {
+          var prop = property[i];
+          var prop = this.hasOwnProperty('_' + prop) ? '_' + prop : prop;
+console.log(prop, value);
+          try {
+            this[prop] = JSON.parse(value[i]);
+          } catch (error) {
+            this[prop] = value[i];
+          }
+        }
+
       }
 
-    }; // Game_Event << __processComment
+    }; // Game_Event << processComment
 
   })(Game_Event);                                                                    // }
 
 
 
-})('Character.CommentOptions', 1.11);                                                // }
+})('Character.CommentOptions', 1.13);                                                // }
 
 
 
