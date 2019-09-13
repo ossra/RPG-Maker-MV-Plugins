@@ -2,7 +2,7 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.00] Controls various choice list window options.
+ * @plugindesc [1.10] Controls various choice list window options.
  * @author Ossra
  *
  * @param Plugin Data
@@ -20,9 +20,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.00
+ *   - Version : 1.10
  *   - Release : 11th September 2019
- *   - Updated : 11th September 2019
+ *   - Updated : 13th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
@@ -54,6 +54,20 @@
  *   |--------------------------------------------------------------------------|
  *
  *  (+) ossra ChoiceList clearLayout
+ *   |--------------------------------------------------------------------------|
+ *   | Resets the layout of the choice list.
+ *   |--------------------------------------------------------------------------|
+ *
+ *  (+) ossra ChoiceList setItemStyle width retain
+ *   |--------------------------------------------------------------------------|
+ *   | Set the layout of the choice list.
+ *   |--------------------------------------------------------------------------|
+ *   | < Name >        < Type >        < Note >
+ *   | width           Integer
+ *   | retain          Boolean         Uses current layout until cleared
+ *   |--------------------------------------------------------------------------|
+ *
+ *  (+) ossra ChoiceList clearItemStyle
  *   |--------------------------------------------------------------------------|
  *   | Resets the layout of the choice list.
  *   |--------------------------------------------------------------------------|
@@ -239,7 +253,7 @@ Ossra.Command  = Ossra.Command  || [];
         var align      = args[0];
         var rows       = Number(args[1]);
         var columns    = Number(args[2]);
-        var retain     = args[1] ? args[1] === 'true' : false;
+        var retain     = args[3] ? args[3] === 'true' : false;
 
         $gameMessage.setLayoutOverride(true, align, rows, columns, retain);
 
@@ -258,6 +272,37 @@ Ossra.Command  = Ossra.Command  || [];
       $gameMessage.clearLayoutOverride();
 
     }; // Commands ‹‹ clearLayout
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] setItemStyle
+  // +----------------------------------------------------------------------------------+
+
+    registerPluginCommand('setItemStyle');
+
+    $.setItemStyle = function(args, interpreter) {
+
+      if (args.length >= 1) {
+
+        var width      = Number(args[0]);
+        var retain     = args[1] ? args[1] === 'true' : false;
+
+        $gameMessage.setItemStyleOverride(true, width, retain);
+
+      }
+
+    }; // Commands ‹‹ setItemStyle
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] clearItemStyle
+  // +----------------------------------------------------------------------------------+
+
+    registerPluginCommand('clearItemStyle');
+
+    $.clearItemStyle = function(args, interpreter) {
+
+      $gameMessage.clearItemStyleOverride();
+
+    }; // Commands ‹‹ clearItemStyle
 
   })(ossCommand);                                                                    // }
 
@@ -313,6 +358,18 @@ Ossra.Command  = Ossra.Command  || [];
     }; // Game_Message << setLayoutOverride
 
   // NEW -------------------------------------------------------------------------------+
+  // | [Method] setItemStyleOverride
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.setItemStyleOverride = function(enable, width, retain) {
+
+      this.__choiceOverride.style.enable     = enable;
+      this.__choiceOverride.style.retain     = retain;
+      this.__choiceOverride.style.width      = width;
+
+    }; // Game_Message << setItemStyleOverride
+
+  // NEW -------------------------------------------------------------------------------+
   // | [Method] clearPointOverride
   // +----------------------------------------------------------------------------------+
 
@@ -344,6 +401,20 @@ Ossra.Command  = Ossra.Command  || [];
     }; // Game_Message << clearLayoutOverride
 
   // NEW -------------------------------------------------------------------------------+
+  // | [Method] clearItemStyleOverride
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.clearItemStyleOverride = function() {
+
+      this.__choiceOverride.style = {
+        enable: false,
+        retain: false,
+        width: 96
+      };
+
+    }; // Game_Message << clearItemStyleOverride
+
+  // NEW -------------------------------------------------------------------------------+
   // | [Method] getChoiceOverride
   // +----------------------------------------------------------------------------------+
 
@@ -363,6 +434,7 @@ Ossra.Command  = Ossra.Command  || [];
 
       this.clearPointOverride();
       this.clearLayoutOverride();
+      this.clearItemStyleOverride();
 
     }; // Game_Message << initOverride
 
@@ -381,17 +453,17 @@ Ossra.Command  = Ossra.Command  || [];
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] initialize
   // +----------------------------------------------------------------------------------+
-    
+
     $win.initialize = $.prototype.initialize;
 
     $.prototype.initialize = function(messageWindow) {
-      
+
       this.__choiceOverride = $gameMessage.getChoiceOverride();
 
       $win.initialize.call(this, messageWindow);
 
     }; // Window_ChoiceList << initialize
-    
+
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] start
   // +----------------------------------------------------------------------------------+
@@ -401,7 +473,7 @@ Ossra.Command  = Ossra.Command  || [];
     $.prototype.start = function() {
 
       this.__choiceOverride = $gameMessage.getChoiceOverride();
-    
+
       $win.start.call(this);
 
     }; // Window_ChoiceList << start
@@ -505,7 +577,7 @@ Ossra.Command  = Ossra.Command  || [];
       }
 
     }; // Window_ChoiceList << drawItem
-    
+
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] close
   // +----------------------------------------------------------------------------------+
@@ -522,15 +594,36 @@ Ossra.Command  = Ossra.Command  || [];
         $gameMessage.clearLayoutOverride();
       }
 
+      if (!this.__choiceOverride.style.retain) {
+        $gameMessage.clearItemStyleOverride();
+      }
+
       $win.close.call(this);
 
     }; // Window_ChoiceList << close
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] maxChoiceWidth
+  // +----------------------------------------------------------------------------------+
+
+    $win.maxChoiceWidth = $.prototype.maxChoiceWidth;
+
+    $.prototype.maxChoiceWidth = function() {
+
+      if (this.__choiceOverride.style.enable) {
+
+        return this.__choiceOverride.style.width;
+      } else {
+        return $win.maxChoiceWidth.call(this);
+      }
+
+    }; // Window_ChoiceList << maxChoiceWidth
 
   })(Window_ChoiceList);                                                             // }
 
 
 
-})('Window.ChoiceList', 1.00);                                                       // }
+})('Window.ChoiceList', 1.10);                                                       // }
 
 
 
