@@ -58,12 +58,13 @@
  *   | Resets the layout of the choice list.
  *   |--------------------------------------------------------------------------|
  *
- *  (+) ossra ChoiceList setItemStyle width retain
+ *  (+) ossra ChoiceList setItemStyle option value retain
  *   |--------------------------------------------------------------------------|
  *   | Set the layout of the choice list.
  *   |--------------------------------------------------------------------------|
  *   | < Name >        < Type >        < Note >
- *   | width           Integer
+ *   | option          String          Options are 'width' and 'spacing'
+ *   | value           Integer
  *   | retain          Boolean         Uses current layout until cleared
  *   |--------------------------------------------------------------------------|
  *
@@ -281,12 +282,19 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.setItemStyle = function(args, interpreter) {
 
-      if (args.length >= 1) {
+      if (args.length >= 2) {
 
-        var width      = Number(args[0]);
-        var retain     = args[1] ? args[1] === 'true' : false;
+        var option     = args[0];
+        var value      = Number(args[1]);
+        var retain     = args[2] ? args[2] === 'true' : false;
 
-        $gameMessage.setItemStyleOverride(true, width, retain);
+        if ($gameMessage.__choiceOverride.style.hasOwnProperty(option)) {
+          $gameMessage.__choiceOverride.style.enable  = true;
+          $gameMessage.__choiceOverride.style.retain  = retain;
+          $gameMessage.__choiceOverride.style[option] = value;
+        }
+        
+        // $gameMessage.setItemStyleOverride(true, width, retain);
 
       }
 
@@ -366,6 +374,7 @@ Ossra.Command  = Ossra.Command  || [];
       this.__choiceOverride.style.enable     = enable;
       this.__choiceOverride.style.retain     = retain;
       this.__choiceOverride.style.width      = width;
+      this.__choiceOverride.style.spacing    = spacing;
 
     }; // Game_Message << setItemStyleOverride
 
@@ -409,7 +418,8 @@ Ossra.Command  = Ossra.Command  || [];
       this.__choiceOverride.style = {
         enable: false,
         retain: false,
-        width: 96
+        width: 96,
+        spacing: 12
       };
 
     }; // Game_Message << clearItemStyleOverride
@@ -611,13 +621,28 @@ Ossra.Command  = Ossra.Command  || [];
     $.prototype.maxChoiceWidth = function() {
 
       if (this.__choiceOverride.style.enable) {
-
         return this.__choiceOverride.style.width;
       } else {
         return $win.maxChoiceWidth.call(this);
       }
 
     }; // Window_ChoiceList << maxChoiceWidth
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] spacing
+  // +----------------------------------------------------------------------------------+
+
+    $win.spacing = $.prototype.spacing;
+
+    $.prototype.spacing = function() {
+
+      if (this.__choiceOverride.style.enable) {
+        return this.__choiceOverride.style.spacing;
+      } else {
+        return $win.spacing.call(this);
+      }
+
+    }; // Window_ChoiceList << spacing
 
   })(Window_ChoiceList);                                                             // }
 
