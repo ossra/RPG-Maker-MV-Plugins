@@ -2,7 +2,7 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.10] Controls various choice list window options.
+ * @plugindesc [1.12] Controls various choice list window options.
  * @author Ossra
  *
  * @param Plugin Data
@@ -20,9 +20,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.10
+ *   - Version : 1.12
  *   - Release : 11th September 2019
- *   - Updated : 13th September 2019
+ *   - Updated : 14th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
@@ -648,7 +648,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Window.ChoiceList', 1.10);                                                       // }
+})('Window.ChoiceList', 1.12);                                                       // }
 
 
 
