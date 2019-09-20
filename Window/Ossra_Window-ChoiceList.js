@@ -2,8 +2,22 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.12] Controls various choice list window options.
+ * @plugindesc [1.21] Controls various choice list window options.
  * @author Ossra
+ *
+ * @param Default Properties
+ * @type text
+ * @default ------------------------------------
+ *
+ * @param Window
+ * @parent Default Properties
+ * @desc The default properties of the choice list window.
+ * @type struct<optionsWindow>
+ *
+ * @param Item
+ * @parent Default Properties
+ * @desc The default properties of each option on the choice list window.
+ * @type struct<optionsItem>
  *
  * @param Plugin Data
  * @type text
@@ -20,61 +34,70 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.12
+ *   - Version : 1.21
  *   - Release : 11th September 2019
- *   - Updated : 14th September 2019
+ *   - Updated : 20th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
  *
- *  (+) ossra ChoiceList setPosition x y retain
+ *  (+) ossra ChoiceList set section property value retain
+ *  (+) ossra ChoiceList set section property,property value,value retain
  *   |--------------------------------------------------------------------------|
- *   | Set the position of the choice list on the screen.
- *   |--------------------------------------------------------------------------|
- *   | < Name >        < Type >        < Note >
- *   | x               Integer
- *   | y               Integer
- *   | retain          Boolean         Uses current X,Y values until cleared
- *   |--------------------------------------------------------------------------|
- *
- *  (+) ossra ChoiceList clearPosition
- *   |--------------------------------------------------------------------------|
- *   | Resets the position of the choice list on the screen.
- *   |--------------------------------------------------------------------------|
- *
- *  (+) ossra ChoiceList setLayout align rows columns retain
- *   |--------------------------------------------------------------------------|
- *   | Set the layout of the choice list.
+ *   | Sets one or more properties of the choice list.
  *   |--------------------------------------------------------------------------|
  *   | < Name >        < Type >        < Note >
- *   | align           String          Aligns text to left, center, or right
- *   | rows            Integer
- *   | columns         Integer
- *   | retain          Boolean         Uses current layout until cleared
+ *   | section         String
+ *   | property        String
+ *   | value           Any
+ *   | retain          Boolean         Temporarily sets the value as default.
  *   |--------------------------------------------------------------------------|
  *
- *  (+) ossra ChoiceList clearLayout
+ *  (+) ossra ChoiceList clear section
+ *  (+) ossra ChoiceList clear section property
+ *  (+) ossra ChoiceList clear section property,property
  *   |--------------------------------------------------------------------------|
- *   | Resets the layout of the choice list.
- *   |--------------------------------------------------------------------------|
- *
- *  (+) ossra ChoiceList setItemStyle option value retain
- *   |--------------------------------------------------------------------------|
- *   | Set the layout of the choice list.
- *   |--------------------------------------------------------------------------|
- *   | < Name >        < Type >        < Note >
- *   | option          String          Options are 'width' and 'spacing'
- *   | value           Integer
- *   | retain          Boolean         Uses current layout until cleared
- *   |--------------------------------------------------------------------------|
- *
- *  (+) ossra ChoiceList clearItemStyle
- *   |--------------------------------------------------------------------------|
- *   | Resets the layout of the choice list.
+ *   | Clears the specified properties of the choice list.
  *   |--------------------------------------------------------------------------|
  */
 // +====================================================================================+
-
+ /*~struct~optionsWindow:
+ * @param X Position
+ * @desc The x coordinate of the choice window. Negative values are accepted.
+ * @type number
+ * @min -9999999
+ *
+ * @param Y Position
+ * @desc The y coordinate of the choice window. Negative values are accepted.
+ * @type number
+ * @min -9999999
+ *
+ * @param Rows
+ * @desc The number of rows the choice window will display.
+ * @type number
+ *
+ * @param Columns
+ * @desc The number of columns the choice window will display.
+ * @type number
+ */
+ /*~struct~optionsItem:
+ * @param Text Align
+ * @desc The text alignment of each choice option.
+ * @type select
+ * @option left
+ * @option center
+ * @option right
+ * @default left
+ *
+ * @param Width
+ * @desc The maximum width of each choice option. Value is in pixels.
+ * @type number
+ *
+ * @param Spacing
+ * @desc The spacing between each choice option. Value is in pixels.
+ * @type number
+ */
+// +====================================================================================+
 
 
 // +===================================================|                      Namespace |
@@ -136,15 +159,227 @@ Ossra.Command  = Ossra.Command  || [];
   // [Namespace] Plugin
   var ossPlugin   = setNamespace(Ossra.Plugin, pluginName);
 
-  var ossData     = setNamespace(ossPlugin, 'Data');
   var ossCore     = setNamespace(ossPlugin, 'Core');
   var ossManager  = setNamespace(ossPlugin, 'Manager');
   var ossObject   = setNamespace(ossPlugin, 'Object');
   var ossScene    = setNamespace(ossPlugin, 'Scene');
   var ossSprite   = setNamespace(ossPlugin, 'Sprite');
   var ossWindow   = setNamespace(ossPlugin, 'Window');
+
+  var ossData     = setNamespace(ossPlugin, 'Data');
+  var ossConfig   = setNamespace(ossPlugin, 'Config');
+  var ossRegExp   = setNamespace(ossPlugin, 'RegExp');
   var ossCommand  = setNamespace(ossPlugin, 'Command');
   var ossFunc     = setNamespace(ossPlugin, 'Function');
+
+
+
+  (function($) {                                                                     // {
+
+  // +=================================================|                      Functions |
+  // | [Plugin] Functions
+  // +==================================================================================+
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] StyleContainer
+  // +----------------------------------------------------------------------------------+
+
+    $.StyleContainer = function () {
+      this._data    = { };
+      this._default = {
+        value: null,
+        enabled: false,
+        retain: false,
+        _default: null,
+        clear: function () {
+          this.value   = JSON.parse(JSON.stringify(this._default));
+          this.enabled = this._default ? true : false;
+          this.retain  = this._default ? true : false;
+        }
+      };
+
+      this.add = function (section, property, defaults) {
+        if (!this._data[section]) this._data[section] = { };
+
+        this._data[section][property] = Object.assign({}, this._default);
+
+        if (defaults && typeof defaults !== 'undefined') {
+          this.set(section, property, defaults, true, true, defaults);
+        }
+      };
+
+      this.get = function (section, property) {
+        if (typeof property !== 'undefined') {
+          return this._data[section][property];
+        } else {
+          return this._data[section];
+        }
+      };
+
+      this.set = function (section, property, value, enabled, retain, defaults) {
+        this._data[section][property].value   = value;
+        this._data[section][property].enabled = enabled || false;
+        this._data[section][property].retain  = retain  || false;
+
+        if (defaults) {
+          this._data[section][property]._default = defaults;
+        }
+      };
+
+      this.clear = function (section, property, force) {
+        if (typeof property !== 'undefined') {
+          if (!this._data[section][property].retain || force) {
+            this._data[section][property].clear();
+          }
+        } else {
+          Object.keys(this._data[section]).forEach(function(key) {
+            if (!this._data[section][key].retain || force) {
+              this._data[section][key].clear();
+            }
+          }, this);
+        }
+      };
+
+      this.reset = function () {
+        Object.keys(this._data).forEach(function(key) {
+          this.clear(key);
+        }, this);
+      };
+    }; // Functions << StyleContainer
+
+  })(ossFunc);                                                                       // }
+
+
+
+  (function() {                                                                      // {
+
+  // +=================================================|                      Functions |
+  // | [Setup] Functions
+  // +==================================================================================+
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] getPlugin
+  // +----------------------------------------------------------------------------------+
+
+    function getPlugin (gid) {
+
+      return $plugins.filter(function(plugin) {
+        return plugin.parameters['Global Identifier'] === gid;
+      })[0]['parameters'];
+
+    }; // Setup << getPlugin
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] getAllParameters
+  // +----------------------------------------------------------------------------------+
+
+    function getAllParameters (gid, defaults, output) {
+
+      var parameters = getPlugin(gid);
+      parameters     = parseAllParameters(parameters);
+      parameters     = parseDefaultData(parameters, defaults, output);
+
+    }; // Setup << getAllParameters
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] parseAllParameters
+  // +----------------------------------------------------------------------------------+
+    function parseAllParameters (input) {
+
+      Object.keys(input).forEach(function(key) {
+        try {
+          input[key] = JSON.parse(input[key]);
+
+          parseAllParameters(input[key]);
+        } catch (e) {
+
+        }
+      });
+
+      return input;
+
+    }; // Setup << parseAllParameters
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] parseDefaultData
+  // +----------------------------------------------------------------------------------+
+
+    function parseDefaultData (input, defaults, output) {
+
+      function isUndefined(object) {
+        return typeof object === 'undefined';
+      };
+
+      Object.keys(defaults).forEach(function(key) {
+        var value = defaults[key];
+        var type  = value ? value.constructor : null;
+        output    = output ? output : { };
+
+        switch (type) {
+          case Object:
+            input       = input ? input : { };
+            output[key] = parseDefaultData(input[key], value, output[key]);
+            break;
+          case Array:
+            input       = input ? input : [];
+            output[key] = [];
+
+            input[key].forEach(function (struct, index) {
+              if (struct.constructor === Array || struct.constructor === Object) {
+                parseDefaultData(struct, value[0], output[key][index]);
+              } else {
+                output[key][index] = struct;
+              }
+            });
+            break;
+          default:
+            if (!isUndefined(input)) {
+              output[key] = !isUndefined(input[key]) ? input[key] : value;
+            } else {
+              output[key] = value;
+            }
+            break;
+        }
+      });
+
+      return output;
+
+    }; // Setup << parseDefaultData
+
+  // +=================================================|                  Configuration |
+  // | [Setup] Configuration
+  // +==================================================================================+
+
+  // [Setup] Configuration Defaults
+    var ossDefaults = {
+      'Window': {
+        'X Position': null,
+        'Y Position': null,
+        'Rows': null,
+        'Columns': null
+      },
+      'Item': {
+        'Text Align': null,
+        'Width': null,
+        'Spacing': null
+      }
+    }
+
+  // [Setup] Prepare Configuration
+    getAllParameters('ossra-bbCPaTCrLPwH6ow', ossDefaults, ossConfig);
+
+    ossData.style = new ossFunc.StyleContainer();
+
+    ossData.style.add('window', 'x', ossConfig['Window']['X Position']);
+    ossData.style.add('window', 'y', ossConfig['Window']['Y Position']);
+    ossData.style.add('window', 'rows', ossConfig['Window']['Rows']);
+    ossData.style.add('window', 'columns', ossConfig['Window']['Columns']);
+
+    ossData.style.add('item', 'align', ossConfig['Item']['Text Align']);
+    ossData.style.add('item', 'width', ossConfig['Item']['Width']);
+    ossData.style.add('item', 'spacing', ossConfig['Item']['Spacing']);
+
+  })();                                                                              // }
 
 
 
@@ -178,7 +413,7 @@ Ossra.Command  = Ossra.Command  || [];
             var func   = Ossra.Plugin[group][plugin]['Command'][name];
 
             if (typeof func !== 'undefined') {
-              func(args.slice(2, args.length), this);
+              func.call(this, args.slice(2, args.length));
             }
           }
         }
@@ -203,252 +438,53 @@ Ossra.Command  = Ossra.Command  || [];
         name: command,
         group: namespace[0],
         plugin: namespace[1]
-      }
+      };
 
       Ossra.Command.push(path);
 
     }; // Util ‹‹ registerPluginCommand
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] setPosition
+  // | [Method] set
   // +----------------------------------------------------------------------------------+
 
-    registerPluginCommand('setPosition');
+    registerPluginCommand('set');
 
-    $.setPosition = function(args, interpreter) {
-
-      if (args.length >= 2) {
-
-        var x      = Number(args[0]);
-        var y      = Number(args[1]);
-        var retain = args[2] ? args[2] === 'true' : false;
-
-        $gameMessage.setPointOverride(true, x, y, retain);
-
-      }
-
-    }; // Commands ‹‹ setPosition
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] clearPosition
-  // +----------------------------------------------------------------------------------+
-
-    registerPluginCommand('clearPosition');
-
-    $.clearPosition = function(args, interpreter) {
-
-      $gameMessage.clearPointOverride();
-
-    }; // Commands ‹‹ clearPosition
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] setLayout
-  // +----------------------------------------------------------------------------------+
-
-    registerPluginCommand('setLayout');
-
-    $.setLayout = function(args, interpreter) {
+    $.set = function(args) {
 
       if (args.length >= 3) {
 
-        var align      = args[0];
-        var rows       = Number(args[1]);
-        var columns    = Number(args[2]);
-        var retain     = args[3] ? args[3] === 'true' : false;
+        var section  = args[0];
+        var property = args[1];
+        var value    = JSON.parse(args[2]);
+        var retain   = args[3] ? args[3] === 'true' : false;
 
-        $gameMessage.setLayoutOverride(true, align, rows, columns, retain);
-
-      }
-
-    }; // Commands ‹‹ setLayout
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] clearLayout
-  // +----------------------------------------------------------------------------------+
-
-    registerPluginCommand('clearLayout');
-
-    $.clearLayout = function(args, interpreter) {
-
-      $gameMessage.clearLayoutOverride();
-
-    }; // Commands ‹‹ clearLayout
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] setItemStyle
-  // +----------------------------------------------------------------------------------+
-
-    registerPluginCommand('setItemStyle');
-
-    $.setItemStyle = function(args, interpreter) {
-
-      if (args.length >= 2) {
-
-        var option     = args[0];
-        var value      = Number(args[1]);
-        var retain     = args[2] ? args[2] === 'true' : false;
-
-        if ($gameMessage.__choiceOverride.style.hasOwnProperty(option)) {
-          $gameMessage.__choiceOverride.style.enable  = true;
-          $gameMessage.__choiceOverride.style.retain  = retain;
-          $gameMessage.__choiceOverride.style[option] = value;
-        }
-        
-        // $gameMessage.setItemStyleOverride(true, width, retain);
+        ossData.style.set(section, property, value, true, retain);
 
       }
 
-    }; // Commands ‹‹ setItemStyle
+    }; // Commands ‹‹ set
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] clearItemStyle
+  // | [Method] clear
   // +----------------------------------------------------------------------------------+
 
-    registerPluginCommand('clearItemStyle');
+    registerPluginCommand('clear');
 
-    $.clearItemStyle = function(args, interpreter) {
+    $.clear = function(args) {
 
-      $gameMessage.clearItemStyleOverride();
+      if (args.length >= 1) {
 
-    }; // Commands ‹‹ clearItemStyle
+        var section  = args[0];
+        var property = args[1];
+
+        ossData.style.clear(section, property, true);
+
+      }
+
+    }; // Commands ‹‹ clear
 
   })(ossCommand);                                                                    // }
-
-
-
-  (function($) {                                                                     // {
-
-  // +=================================================|                   Game_Message |
-  // | [Plugin] Game_Message
-  // +==================================================================================+
-
-    var $obj = setNamespace(ossObject, 'Game_Message');
-
-  // ALIAS -----------------------------------------------------------------------------+
-  // | [Method] initialize
-  // +----------------------------------------------------------------------------------+
-
-    $obj.initialize = $.prototype.initialize;
-
-    $.prototype.initialize = function() {
-
-      $obj.initialize.call(this);
-
-      this.initOverride();
-
-    }; // Game_Message << initialize
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] setPointOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.setPointOverride = function(enable, x, y, retain) {
-
-      this.__choiceOverride.point.enable = enable;
-      this.__choiceOverride.point.retain = retain;
-      this.__choiceOverride.point.x = x;
-      this.__choiceOverride.point.y = y;
-
-    }; // Game_Message << setPointOverride
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] setLayoutOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.setLayoutOverride = function(enable, align, rows, columns, retain) {
-
-      this.__choiceOverride.layout.enable     = enable;
-      this.__choiceOverride.layout.retain     = retain;
-      this.__choiceOverride.layout.align      = align;
-      this.__choiceOverride.layout.rows       = rows;
-      this.__choiceOverride.layout.columns    = columns;
-
-    }; // Game_Message << setLayoutOverride
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] setItemStyleOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.setItemStyleOverride = function(enable, width, retain) {
-
-      this.__choiceOverride.style.enable     = enable;
-      this.__choiceOverride.style.retain     = retain;
-      this.__choiceOverride.style.width      = width;
-      this.__choiceOverride.style.spacing    = spacing;
-
-    }; // Game_Message << setItemStyleOverride
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] clearPointOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.clearPointOverride = function() {
-
-      this.__choiceOverride.point = {
-        enable: false,
-        retain: false,
-        x: 0,
-        y: 0
-      };
-
-    }; // Game_Message << clearPointOverride
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] clearLayoutOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.clearLayoutOverride = function() {
-
-      this.__choiceOverride.layout = {
-        enable: false,
-        retain: false,
-        align: 'left',
-        rows: 0,
-        columns: 0
-      };
-
-    }; // Game_Message << clearLayoutOverride
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] clearItemStyleOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.clearItemStyleOverride = function() {
-
-      this.__choiceOverride.style = {
-        enable: false,
-        retain: false,
-        width: 96,
-        spacing: 12
-      };
-
-    }; // Game_Message << clearItemStyleOverride
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] getChoiceOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.getChoiceOverride = function() {
-
-      return this.__choiceOverride;
-
-    }; // Game_Message << getChoiceOverride
-
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] initOverride
-  // +----------------------------------------------------------------------------------+
-
-    $.prototype.initOverride = function() {
-
-      this.__choiceOverride = { };
-
-      this.clearPointOverride();
-      this.clearLayoutOverride();
-      this.clearItemStyleOverride();
-
-    }; // Game_Message << initOverride
-
-  })(Game_Message);                                                                  // }
 
 
 
@@ -461,34 +497,6 @@ Ossra.Command  = Ossra.Command  || [];
     var $win = setNamespace(ossObject, 'Window_ChoiceList');
 
   // ALIAS -----------------------------------------------------------------------------+
-  // | [Method] initialize
-  // +----------------------------------------------------------------------------------+
-
-    $win.initialize = $.prototype.initialize;
-
-    $.prototype.initialize = function(messageWindow) {
-
-      this.__choiceOverride = $gameMessage.getChoiceOverride();
-
-      $win.initialize.call(this, messageWindow);
-
-    }; // Window_ChoiceList << initialize
-
-  // ALIAS -----------------------------------------------------------------------------+
-  // | [Method] start
-  // +----------------------------------------------------------------------------------+
-
-    $win.start = $.prototype.start;
-
-    $.prototype.start = function() {
-
-      this.__choiceOverride = $gameMessage.getChoiceOverride();
-
-      $win.start.call(this);
-
-    }; // Window_ChoiceList << start
-
-  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updatePlacement
   // +----------------------------------------------------------------------------------+
 
@@ -498,9 +506,14 @@ Ossra.Command  = Ossra.Command  || [];
 
       $win.updatePlacement.call(this);
 
-      if (this.__choiceOverride.point.enable) {
-        this.x = this.__choiceOverride.point.x;
-        this.y = this.__choiceOverride.point.y;
+      var style = ossData.style.get('window');
+
+      if (style.x.enabled) {
+        this.x = style.x.value;
+      }
+
+      if (style.y.enabled) {
+        this.y = style.y.value;
       }
 
     }; // Window_ChoiceList << updatePlacement
@@ -513,8 +526,10 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.numVisibleRows = function() {
 
-      if (this.__choiceOverride.layout.enable) {
-        return this.__choiceOverride.layout.rows;
+      var style = ossData.style.get('window', 'rows');
+
+      if (style.enabled) {
+        return style.value;
       } else {
         return $win.numVisibleRows.call(this);
       }
@@ -529,8 +544,10 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.maxCols = function() {
 
-      if (this.__choiceOverride.layout.enable) {
-        return this.__choiceOverride.layout.columns;
+      var style = ossData.style.get('window', 'columns');
+
+      if (style.enabled) {
+        return style.value;
       } else {
         return $win.maxCols.call(this);
       }
@@ -545,8 +562,10 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.itemTextAlign = function() {
 
-      if (this.__choiceOverride.layout.align) {
-        return this.__choiceOverride.layout.align;
+      var style = ossData.style.get('item', 'align');
+
+      if (style.enabled) {
+        return style.value;
       } else {
         return $win.itemTextAlign.call(this);
       }
@@ -561,14 +580,15 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.windowWidth = function() {
 
-      if (this.__choiceOverride.layout.columns > 0) {
-        var width = this.maxChoiceWidth() * this.maxCols() + this.padding * 2;
+      var style = ossData.style.get('window', 'columns');
+
+      if (style.enabled) {
+        var width = (this.maxChoiceWidth() * this.maxCols()) + (this.padding * 2);
 
         return width;
       } else {
         return $win.windowWidth.call(this);
       }
-
 
     }; // Window_ChoiceList << windowWidth
 
@@ -580,7 +600,9 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.drawItem = function(index) {
 
-      if (this.__choiceOverride.layout.align) {
+      var style = ossData.style.get('item', 'align');
+
+      if (style.enabled) {
         Window_Command.prototype.drawItem.call(this, index);
       } else {
         $win.drawItem.call(this, index);
@@ -596,17 +618,7 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.close = function() {
 
-      if (!this.__choiceOverride.point.retain) {
-        $gameMessage.clearPointOverride();
-      }
-
-      if (!this.__choiceOverride.layout.retain) {
-        $gameMessage.clearLayoutOverride();
-      }
-
-      if (!this.__choiceOverride.style.retain) {
-        $gameMessage.clearItemStyleOverride();
-      }
+      ossData.style.reset();
 
       $win.close.call(this);
 
@@ -620,8 +632,10 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.maxChoiceWidth = function() {
 
-      if (this.__choiceOverride.style.enable) {
-        return this.__choiceOverride.style.width;
+      var style = ossData.style.get('item', 'width');
+
+      if (style.enabled) {
+        return style.value;
       } else {
         return $win.maxChoiceWidth.call(this);
       }
@@ -636,19 +650,83 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.spacing = function() {
 
-      if (this.__choiceOverride.style.enable) {
-        return this.__choiceOverride.style.spacing;
+      var style = ossData.style.get('item', 'spacing');
+
+      if (style.enabled) {
+        return style.value;
       } else {
         return $win.spacing.call(this);
       }
 
     }; // Window_ChoiceList << spacing
 
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] itemRect
+  // +----------------------------------------------------------------------------------+
+
+    $win.itemRect = $.prototype.itemRect;
+
+    $.prototype.itemRect = function(index) {
+      var style = ossData.style.get('item', 'spacing');
+      var rect  = $win.itemRect.call(this, index);
+
+      if (style.enabled) {
+        if (rect.y > 0) {
+          var maxCols = this.maxCols();
+
+          rect.y = rect.y + (style.value * Math.floor(index / maxCols));
+        }
+      }
+
+      return rect;
+    }; // Window_ChoiceList << itemRect
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] contentsHeight
+  // +----------------------------------------------------------------------------------+
+
+    $win.contentsHeight = $.prototype.contentsHeight;
+
+    $.prototype.contentsHeight = function() {
+
+      var style = ossData.style.get('item', 'spacing');
+
+      if (style.enabled) {
+        var height  = $win.contentsHeight.call(this);
+        var spacing = Math.floor(style.value * (this.numVisibleRows() - 1));
+
+        return height + spacing;
+      } else {
+        return $win.contentsHeight.call(this);
+      }
+
+    }; // Window_ChoiceList << contentsHeight
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] fittingHeight
+  // +----------------------------------------------------------------------------------+
+
+    $win.fittingHeight = $.prototype.fittingHeight;
+
+    $.prototype.fittingHeight = function(numLines) {
+
+      var style = ossData.style.get('item', 'spacing');
+
+      if (style.enabled) {
+        var height  = (numLines * this.lineHeight()) + (this.standardPadding() * 2);
+        var spacing = (style.value * (numLines - 1));
+
+        return height + spacing;
+      } else {
+        return $win.fittingHeight.call(this, numLines);
+      }
+    }; // Window_ChoiceList << fittingHeight
+
   })(Window_ChoiceList);                                                             // }
 
 
 
-})('Window.ChoiceList', 1.12);                                                       // }
+})('Window.ChoiceList', 1.21);                                                       // }
 
 
 
