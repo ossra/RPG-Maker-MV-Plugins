@@ -180,19 +180,17 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Plugin] Game_Character
   // +==================================================================================+
 
-    document.body.style.display = 'flex';
-    document.body.style.height  = '100vh';
-    document.body.style.width   = '100vw';
-    document.body.style.margin  = 'auto';
+    var bgColor = 'background-color: ' + ossConfig['Color'] + ' !important;';
 
-    var gameBackground = document.createElement('div');
-    gameBackground.id  = 'GameBackground';
+    var cssText = '';
+    cssText     = cssText + 'height: 100vh;';
+    cssText     = cssText + 'width: 100vw;';
+    cssText     = cssText + 'margin: auto;';
+    cssText     = cssText + bgColor;
 
-    gameBackground.style.display         = 'flex';
-    gameBackground.style.flex            = '1 0 auto';
-    gameBackground.style.backgroundColor = ossConfig['Color'];
+    document.body.style.cssText = cssText;
 
-    document.body.appendChild(gameBackground);
+    document.documentElement.style.cssText = bgColor;
 
   })();                                                                              // }
 
