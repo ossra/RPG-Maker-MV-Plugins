@@ -2,17 +2,22 @@
 // |||  Game | Background Color
 // +====================================================================================+
 /*:
- * @plugindesc [1.02] Changes the background color of the game.
+ * @plugindesc [1.05] Changes the background color of the game.
  * @author Ossra
  *
- * @param General Options
+ * @param Color Options
  * @type text
  * @default ------------------------------------
  *
- * @param Color
- * @parent General Options
+ * @param HTML Document
+ * @parent Color Options
+ * @desc The desired color of the HTML document background.
+ * @type text
+ * @default #000000
+ *
+ * @param Game Background
+ * @parent Color Options
  * @desc The desired color of the game background.
- * NOTE: Value may be any valid CSS color.
  * @type text
  * @default #000000
  *
@@ -31,7 +36,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.02
+ *   - Version : 1.05
  *   - Release : 21st September 2019
  *   - Updated : 21st September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -114,6 +119,34 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
+  (function($) {                                                                     // {
+
+  // +=================================================|                      Functions |
+  // | [Plugin] Functions
+  // +==================================================================================+
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] createColorObject
+  // +----------------------------------------------------------------------------------+
+
+    $.createColorObject = function (data) {
+      var obj = { hex: 0, array: [0,0,0,255], val: '000000' };
+
+      if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(data)) {
+        obj.val   = RegExp.$1;
+        obj.hex   = parseInt('0x' + obj.val);
+        obj.array = obj.val.length === 3 ? obj.val.match(/.{1}/g) : obj.val.match(/.{2}/g);
+        obj.array = obj.array.map(function(color) { return parseInt('0x' + color); });
+        obj.array.push(255);
+      }
+
+      return obj;
+    }; // Functions << createColorObject
+
+  })(ossFunc);                                                                       // }
+
+
+
   (function() {                                                                      // {
 
   // +=================================================|                      Functions |
@@ -162,7 +195,7 @@ Ossra.Command  = Ossra.Command  || [];
       return input;
 
     }; // Setup << parseAllParameters
-  
+
   // +=================================================|                  Configuration |
   // | [Setup] Configuration
   // +==================================================================================+
@@ -170,33 +203,122 @@ Ossra.Command  = Ossra.Command  || [];
   // [Setup] Prepare Configuration
     ossConfig = getAllParameters('ossra-ZiztVs0QrLyque8');
 
-  })();                                                                              // }
+  // [Setup] Set Background Color
+    var docColor  = ossConfig['HTML Document']   || '#000000';
+    var gameColor = ossConfig['Game Background'] || '#000000';
 
+    ossConfig['Game Background'] = ossFunc.createColorObject(gameColor);
 
-
-  (function() {                                                                      // {
-
-  // +=================================================|                 Game_Character |
-  // | [Plugin] Game_Character
-  // +==================================================================================+
-
-    var bgColor = 'background-color: ' + ossConfig['Color'] + ' !important;';
+    var cssColor = 'background-color: ' + docColor + ' !important;';
 
     var cssText = '';
     cssText     = cssText + 'height: 100vh;';
     cssText     = cssText + 'width: 100vw;';
     cssText     = cssText + 'margin: auto;';
-    cssText     = cssText + bgColor;
+    cssText     = cssText + cssColor;
 
-    document.body.style.cssText = cssText;
-
-    document.documentElement.style.cssText = bgColor;
+    document.documentElement.style.cssText = cssColor;
+    document.body.style.cssText            = cssText;
 
   })();                                                                              // }
 
 
 
-})('Game.BackgroundColor', 1.02);                                                    // }
+  (function($) {                                                                     // {
+
+  // +=================================================|                    Game_Screen |
+  // | [Plugin] Game_Screen
+  // +==================================================================================+
+
+    var $obj = setNamespace(ossObject, 'Game_Screen');
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] clear
+  // +----------------------------------------------------------------------------------+
+
+    $obj.clear = $.prototype.clear;
+
+    $.prototype.clear = function() {
+
+      $obj.clear.call(this);
+
+      this.clearBaseScreenColor();
+
+    }; // Game_Screen << clear
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] clearBaseScreenColor
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.clearBaseScreenColor = function() {
+
+      this._baseScreenColor = ossConfig['Game Background'].array;
+
+    }; // Game_Screen << clearBaseScreenColor
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] baseScreenColor
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.baseScreenColor = function() {
+
+      return this._baseScreenColor;
+
+    }; // Game_Screen << baseScreenColor
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] setBaseScreenColor
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.setBaseScreenColor = function(color) {
+
+      this._baseScreenColor = color;
+
+    }; // Game_Screen << setBaseScreenColor
+
+  })(Game_Screen);                                                                   // }
+
+
+
+  (function($) {                                                                     // {
+
+  // +=================================================|                 Spriteset_Base |
+  // | [Plugin] Spriteset_Base
+  // +==================================================================================+
+
+    var $spr = setNamespace(ossSprite, 'Spriteset_Base');
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] update
+  // +----------------------------------------------------------------------------------+
+
+    $spr.update = $.prototype.update;
+
+    $.prototype.update = function() {
+
+      $spr.update.call(this);
+      
+      this.updateBaseSprites();
+
+    }; // Spriteset_Base << update
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] updateScreenSprites
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.updateBaseSprites = function() {
+
+      var color = $gameScreen.baseScreenColor();
+
+      this._blackScreen.setColor(color[0], color[1], color[2]);
+
+    }; // Spriteset_Base << updateScreenSprites
+
+  })(Spriteset_Base);                                                                // }
+
+
+
+})('Game.BackgroundColor', 1.05);                                                    // }
 
 
 
