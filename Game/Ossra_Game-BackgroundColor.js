@@ -2,7 +2,7 @@
 // |||  Game | Background Color
 // +====================================================================================+
 /*:
- * @plugindesc [1.00] Changes the background color of the game.
+ * @plugindesc [1.02] Changes the background color of the game.
  * @author Ossra
  *
  * @param General Options
@@ -31,7 +31,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.00
+ *   - Version : 1.02
  *   - Release : 21st September 2019
  *   - Updated : 21st September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -196,7 +196,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Game.BackgroundColor', 1.00);                                                    // }
+})('Game.BackgroundColor', 1.02);                                                    // }
 
 
 
