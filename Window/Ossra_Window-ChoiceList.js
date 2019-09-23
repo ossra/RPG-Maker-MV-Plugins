@@ -2,7 +2,7 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.21] Controls various choice list window options.
+ * @plugindesc [1.25] Controls various choice list window options.
  * @author Ossra
  *
  * @param Default Properties
@@ -34,9 +34,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.21
+ *   - Version : 1.25
  *   - Release : 11th September 2019
- *   - Updated : 20th September 2019
+ *   - Updated : 23th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
@@ -406,7 +406,7 @@ Ossra.Command  = Ossra.Command  || [];
             return command.plugin === args[0] && command.name === args[1];
           });
 
-          if (path) {
+          if (path.length) {
             var group  = path[0].group;
             var plugin = path[0].plugin;
             var name   = path[0].name;
@@ -494,7 +494,7 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Plugin] Window_ChoiceList
   // +==================================================================================+
 
-    var $win = setNamespace(ossObject, 'Window_ChoiceList');
+    var $win = setNamespace(ossWindow, 'Window_ChoiceList');
 
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updatePlacement
@@ -593,24 +593,6 @@ Ossra.Command  = Ossra.Command  || [];
     }; // Window_ChoiceList << windowWidth
 
   // ALIAS -----------------------------------------------------------------------------+
-  // | [Method] drawItem
-  // +----------------------------------------------------------------------------------+
-
-    $win.drawItem = $.prototype.drawItem;
-
-    $.prototype.drawItem = function(index) {
-
-      var style = ossData.style.get('item', 'align');
-
-      if (style.enabled) {
-        Window_Command.prototype.drawItem.call(this, index);
-      } else {
-        $win.drawItem.call(this, index);
-      }
-
-    }; // Window_ChoiceList << drawItem
-
-  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] close
   // +----------------------------------------------------------------------------------+
 
@@ -682,6 +664,39 @@ Ossra.Command  = Ossra.Command  || [];
     }; // Window_ChoiceList << itemRect
 
   // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] itemRectForText
+  // +----------------------------------------------------------------------------------+
+
+    $win.itemRectForText = $.prototype.itemRectForText;
+
+    $.prototype.itemRectForText = function(index) {
+
+      var style = ossData.style.get('item', 'align');
+
+      if (style.enabled) {
+        var rect        = $win.itemRectForText.call(this, index);
+        var choices     = $gameMessage.choices();
+        var choiceWidth = this.textWidthEx(choices[index]);
+
+        switch (style.value) {
+          case 'center':
+            rect.x += (rect.width / 2) - (choiceWidth / 2);
+            break;
+          case 'right':
+            rect.x += rect.width - choiceWidth;
+            break;
+          default:
+            break;
+        }
+
+        return rect;
+      } else {
+        return $win.itemRectForText.call(this, index);
+      }
+
+    }; // Window_ChoiceList << itemRectForText
+
+  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] contentsHeight
   // +----------------------------------------------------------------------------------+
 
@@ -726,7 +741,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Window.ChoiceList', 1.21);                                                       // }
+})('Window.ChoiceList', 1.25);                                                       // }
 
 
 
