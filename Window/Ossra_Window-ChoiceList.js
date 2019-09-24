@@ -2,7 +2,7 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.25] Controls various choice list window options.
+ * @plugindesc [1.27] Controls various choice list window options.
  * @author Ossra
  *
  * @param Default Properties
@@ -34,9 +34,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.25
+ *   - Version : 1.27
  *   - Release : 11th September 2019
- *   - Updated : 23th September 2019
+ *   - Updated : 24th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
@@ -555,24 +555,6 @@ Ossra.Command  = Ossra.Command  || [];
     }; // Window_ChoiceList << maxCols
 
   // ALIAS -----------------------------------------------------------------------------+
-  // | [Method] itemTextAlign
-  // +----------------------------------------------------------------------------------+
-
-    $win.itemTextAlign = $.prototype.itemTextAlign;
-
-    $.prototype.itemTextAlign = function() {
-
-      var style = ossData.style.get('item', 'align');
-
-      if (style.enabled) {
-        return style.value;
-      } else {
-        return $win.itemTextAlign.call(this);
-      }
-
-    }; // Window_ChoiceList << itemTextAlign
-
-  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] windowWidth
   // +----------------------------------------------------------------------------------+
 
@@ -674,6 +656,10 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'align');
 
       if (style.enabled) {
+        if (Imported.RS_MessageAlign) {
+          $gameMessage.clearAlignLast();
+        }
+
         var rect        = $win.itemRectForText.call(this, index);
         var choices     = $gameMessage.choices();
         var choiceWidth = this.textWidthEx(choices[index]);
@@ -691,6 +677,7 @@ Ossra.Command  = Ossra.Command  || [];
 
         return rect;
       } else {
+
         return $win.itemRectForText.call(this, index);
       }
 
@@ -741,7 +728,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Window.ChoiceList', 1.25);                                                       // }
+})('Window.ChoiceList', 1.27);                                                       // }
 
 
 
