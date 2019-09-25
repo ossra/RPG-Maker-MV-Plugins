@@ -2,7 +2,7 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.27] Controls various choice list window options.
+ * @plugindesc [1.30] Controls various choice list window options.
  * @author Ossra
  *
  * @param Default Properties
@@ -34,15 +34,15 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.27
+ *   - Version : 1.30
  *   - Release : 11th September 2019
- *   - Updated : 24th September 2019
+ *   - Updated : 25th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
  *
  *  (+) ossra ChoiceList set section property value retain
- *  (+) ossra ChoiceList set section property,property value,value retain
+ *  (+) ossra ChoiceList set section property,property value,value retain,retain
  *   |--------------------------------------------------------------------------|
  *   | Sets one or more properties of the choice list.
  *   |--------------------------------------------------------------------------|
@@ -454,12 +454,26 @@ Ossra.Command  = Ossra.Command  || [];
 
       if (args.length >= 3) {
 
-        var section  = args[0];
-        var property = args[1];
-        var value    = JSON.parse(args[2]);
-        var retain   = args[3] ? args[3] === 'true' : false;
+        try {
+          var section  = args[0];
+          var property = args[1].split(',');
+          var value    = JSON.parse('[' + args[2] + ']');
+          var retain   = args[3] ? args[3].split(',') : [];
 
-        ossData.style.set(section, property, value, true, retain);
+          if (retain.length === 1 && property.length > 1) {
+            retain = Array(property.length).fill(retain[0]);
+          }
+
+          for (var i = 0; i < property.length; i++) {
+            if (value[i] !== undefined) {
+              var _retain = retain[i] ? retain[i] === 'true' : false;
+
+              ossData.style.set(section, property[i], value[i], true, _retain);
+            }
+          }
+        } catch(error) {
+          return;
+        }
 
       }
 
@@ -475,10 +489,16 @@ Ossra.Command  = Ossra.Command  || [];
 
       if (args.length >= 1) {
 
-        var section  = args[0];
-        var property = args[1];
+        try {
+          var section  = args[0];
+          var property = args[1].split(',');
 
-        ossData.style.clear(section, property, true);
+          for (var i = 0; i < property.length; i++) {
+            ossData.style.clear(section, property[i], true);
+          }
+        } catch(error) {
+          return;
+        }
 
       }
 
@@ -617,7 +637,10 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'spacing');
 
       if (style.enabled) {
-        return style.value;
+        var constructor = style.value.constructor === Array;
+        var value       = constructor ? style.value[0] : style.value;
+
+        return value;
       } else {
         return $win.spacing.call(this);
       }
@@ -636,9 +659,11 @@ Ossra.Command  = Ossra.Command  || [];
 
       if (style.enabled) {
         if (rect.y > 0) {
-          var maxCols = this.maxCols();
+          var maxCols     = this.maxCols();
+          var constructor = style.value.constructor === Array;
+          var value       = constructor ? style.value[1] : style.value;
 
-          rect.y = rect.y + (style.value * Math.floor(index / maxCols));
+          rect.y = rect.y + (value * Math.floor(index / maxCols));
         }
       }
 
@@ -656,10 +681,6 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'align');
 
       if (style.enabled) {
-        if (Imported.RS_MessageAlign) {
-          $gameMessage.clearAlignLast();
-        }
-
         var rect        = $win.itemRectForText.call(this, index);
         var choices     = $gameMessage.choices();
         var choiceWidth = this.textWidthEx(choices[index]);
@@ -694,8 +715,10 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'spacing');
 
       if (style.enabled) {
-        var height  = $win.contentsHeight.call(this);
-        var spacing = Math.floor(style.value * (this.numVisibleRows() - 1));
+        var height      = $win.contentsHeight.call(this);
+        var constructor = style.value.constructor === Array;
+        var value       = constructor ? style.value[1] : style.value;
+        var spacing     = Math.floor(value * (this.numVisibleRows() - 1));
 
         return height + spacing;
       } else {
@@ -715,8 +738,10 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'spacing');
 
       if (style.enabled) {
-        var height  = (numLines * this.lineHeight()) + (this.standardPadding() * 2);
-        var spacing = (style.value * (numLines - 1));
+        var height      = (numLines * this.lineHeight()) + (this.standardPadding() * 2);
+        var constructor = style.value.constructor === Array;
+        var value       = constructor ? style.value[1] : style.value;
+        var spacing     = (value * (numLines - 1));
 
         return height + spacing;
       } else {
@@ -728,7 +753,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Window.ChoiceList', 1.27);                                                       // }
+})('Window.ChoiceList', 1.30);                                                       // }
 
 
 
