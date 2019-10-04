@@ -2,29 +2,34 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.30] Controls various choice list window options.
+ * @plugindesc [1.32] Controls various choice list window options.
  * @author Ossra
  *
- * @param Default Properties
+ * @param defaultProperties
+ * @text Default Properties
  * @type text
  * @default ------------------------------------
  *
- * @param Window
- * @parent Default Properties
+ * @param window
+ * @text Window
+ * @parent defaultProperties
  * @desc The default properties of the choice list window.
  * @type struct<optionsWindow>
  *
- * @param Item
- * @parent Default Properties
+ * @param item
+ * @text Item
+ * @parent defaultProperties
  * @desc The default properties of each option on the choice list window.
  * @type struct<optionsItem>
  *
- * @param Plugin Data
+ * @param pluginData
+ * @text Plugin Data
  * @type text
  * @default ------------------------------------
  *
- * @param Global Identifier
- * @parent Plugin Data
+ * @param gid
+ * @text Global Identifier
+ * @parent pluginData
  * @desc Global identification tag for internal use only. Do not edit.
  * @type text
  * @default ossra-bbCPaTCrLPwH6ow
@@ -34,9 +39,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.30
+ *   - Version : 1.32
  *   - Release : 11th September 2019
- *   - Updated : 25th September 2019
+ *   - Updated : 30th September 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
@@ -47,10 +52,32 @@
  *   | Sets one or more properties of the choice list.
  *   |--------------------------------------------------------------------------|
  *   | < Name >        < Type >        < Note >
- *   | section         String
- *   | property        String
- *   | value           Any
+ *   | section         String          See list below for options.
+ *   | property        String          See list below for options.
+ *   | value           Any             See list below for values.
  *   | retain          Boolean         Temporarily sets the value as default.
+ *   |--------------------------------------------------------------------------|
+ *
+ *   |--------------------------------------------------------------------------|
+ *   | Section and Property List
+ *   |--------------------------------------------------------------------------|
+ *   | < Name >        < Type >        < Note >
+ *   | window          String
+ *   | | x             Number          X coordinate of the choice window.
+ *   | | y             Number          Y coordinate of the choice window.
+ *   | | rows          Number          Number of rows to be displayed.
+ *   | | columns       Number          Number of columns to be displayed.
+ *   |
+ *   | item            String
+ *   | | align         String          Text alignment of items. Value must be
+ *   | |                               in quotations. (e.g. - "center")
+ *   | | spacing       Varies          Spacing between items. If value is 
+ *   | |                               numerical, both horizontal and vertical
+ *   | |                               spacing is linked. If value is an
+ *   | |                               array (e.g. - [15,25]), then the
+ *   | |                               horizontal value is the first entry and
+ *   | |                               the vertical value is the second entry.
+ *   | | width         Number          Maximum width of items.
  *   |--------------------------------------------------------------------------|
  *
  *  (+) ossra ChoiceList clear section
@@ -62,26 +89,31 @@
  */
 // +====================================================================================+
  /*~struct~optionsWindow:
- * @param X Position
+ * @param x
+ * @text X Position
  * @desc The x coordinate of the choice window. Negative values are accepted.
  * @type number
  * @min -9999999
  *
- * @param Y Position
+ * @param y
+ * @text Y Position
  * @desc The y coordinate of the choice window. Negative values are accepted.
  * @type number
  * @min -9999999
  *
- * @param Rows
+ * @param rows
+ * @text Rows
  * @desc The number of rows the choice window will display.
  * @type number
  *
- * @param Columns
+ * @param columns
+ * @text Columns
  * @desc The number of columns the choice window will display.
  * @type number
  */
  /*~struct~optionsItem:
- * @param Text Align
+ * @param textAlign
+ * @text Text Align
  * @desc The text alignment of each choice option.
  * @type select
  * @option left
@@ -89,11 +121,13 @@
  * @option right
  * @default left
  *
- * @param Width
+ * @param width
+ * @text Width
  * @desc The maximum width of each choice option. Value is in pixels.
  * @type number
  *
- * @param Spacing
+ * @param spacing
+ * @text Spacing
  * @desc The spacing between each choice option. Value is in pixels.
  * @type number
  */
@@ -181,10 +215,10 @@ Ossra.Command  = Ossra.Command  || [];
   // +==================================================================================+
 
   // +----------------------------------------------------------------------------------+
-  // | [Method] StyleContainer
+  // | [Method] Ossra_ChoiceStyle
   // +----------------------------------------------------------------------------------+
 
-    $.StyleContainer = function () {
+    $.Ossra_ChoiceStyle = function () {
       this._data    = { };
       this._default = {
         value: null,
@@ -245,9 +279,9 @@ Ossra.Command  = Ossra.Command  || [];
           this.clear(key);
         }, this);
       };
-    }; // Functions << StyleContainer
+    }; // Functions << Ossra_ChoiceStyle
 
-  })(ossFunc);                                                                       // }
+  })(ossObject);                                                                     // }
 
 
 
@@ -264,35 +298,41 @@ Ossra.Command  = Ossra.Command  || [];
     function getPlugin (gid) {
 
       return $plugins.filter(function(plugin) {
-        return plugin.parameters['Global Identifier'] === gid;
+        return plugin.parameters['gid'] === gid;
       })[0]['parameters'];
 
     }; // Setup << getPlugin
 
   // +----------------------------------------------------------------------------------+
-  // | [Method] getAllParameters
-  // +----------------------------------------------------------------------------------+
-
-    function getAllParameters (gid, defaults, output) {
-
-      var parameters = getPlugin(gid);
-      parameters     = parseAllParameters(parameters);
-      parameters     = parseDefaultData(parameters, defaults, output);
-
-    }; // Setup << getAllParameters
-
-  // +----------------------------------------------------------------------------------+
   // | [Method] parseAllParameters
   // +----------------------------------------------------------------------------------+
-    function parseAllParameters (input) {
+
+    function parseAllParameters (input, defaults) {
 
       Object.keys(input).forEach(function(key) {
-        try {
-          input[key] = JSON.parse(input[key]);
+        if (typeof defaults[key] === 'undefined') {
+          delete input[key];
+        } else {
+          try {
+            input[key] = JSON.parse(input[key], function(_key, _value) {
+              if (/^(\w+)__(\w+)$/i.test(_key)) {
+                this[RegExp.$1] = ossFunc[RegExp.$2].call(this, _value);
+              } else {
+                return _value;
+              }
+            });
 
-          parseAllParameters(input[key]);
-        } catch (e) {
-
+            if (Array.isArray(input[key])) {
+              for (var i = 0; i < input[key].length; i++) {
+                input[key][i] = JSON.parse(input[key][i]);
+                input[key][i] = parseAllParameters(input[key][i], defaults[key][0]);
+              }
+            } else {
+              parseAllParameters(input[key], defaults[key]);
+            }
+          } catch (e) {
+            if (input[key] === '') input[key] = defaults[key];
+          }
         }
       });
 
@@ -301,89 +341,66 @@ Ossra.Command  = Ossra.Command  || [];
     }; // Setup << parseAllParameters
 
   // +----------------------------------------------------------------------------------+
-  // | [Method] parseDefaultData
+  // | [Method] getAllParameters
   // +----------------------------------------------------------------------------------+
 
-    function parseDefaultData (input, defaults, output) {
+    function getAllParameters (gid, defaults) {
 
-      function isUndefined(object) {
-        return typeof object === 'undefined';
-      };
+      var parameters = getPlugin(gid);
+      parameters     = parseAllParameters(parameters, defaults);
 
-      Object.keys(defaults).forEach(function(key) {
-        var value = defaults[key];
-        var type  = value ? value.constructor : null;
-        output    = output ? output : { };
+      Object.assign(ossConfig, parameters);
 
-        switch (type) {
-          case Object:
-            input       = input ? input : { };
-            output[key] = parseDefaultData(input[key], value, output[key]);
-            break;
-          case Array:
-            input       = input ? input : [];
-            output[key] = [];
-
-            input[key].forEach(function (struct, index) {
-              if (struct.constructor === Array || struct.constructor === Object) {
-                parseDefaultData(struct, value[0], output[key][index]);
-              } else {
-                output[key][index] = struct;
-              }
-            });
-            break;
-          default:
-            if (!isUndefined(input)) {
-              output[key] = !isUndefined(input[key]) ? input[key] : value;
-            } else {
-              output[key] = value;
-            }
-            break;
-        }
-      });
-
-      return output;
-
-    }; // Setup << parseDefaultData
+    }; // Setup << getAllParameters
 
   // +=================================================|                  Configuration |
   // | [Setup] Configuration
   // +==================================================================================+
 
-  // [Setup] Configuration Defaults
+  // +----------------------------------------------------------------------------------+
+  // | [Setup] Create Defaults
+  // +----------------------------------------------------------------------------------+
+
     var ossDefaults = {
-      'Window': {
-        'X Position': null,
-        'Y Position': null,
-        'Rows': null,
-        'Columns': null
+      'window': {
+        'x': null,
+        'y': null,
+        'rows': null,
+        'columns': null
       },
-      'Item': {
-        'Text Align': null,
-        'Width': null,
-        'Spacing': null
+      'item': {
+        'textAlign': null,
+        'width': null,
+        'spacing': null
       }
     }
 
-  // [Setup] Prepare Configuration
-    getAllParameters('ossra-bbCPaTCrLPwH6ow', ossDefaults, ossConfig);
+  // +----------------------------------------------------------------------------------+
+  // | [Setup] Parse Parameters
+  // +----------------------------------------------------------------------------------+
 
-    ossData.style = new ossFunc.StyleContainer();
+    getAllParameters('ossra-bbCPaTCrLPwH6ow', ossDefaults);
 
-    ossData.style.add('window', 'x', ossConfig['Window']['X Position']);
-    ossData.style.add('window', 'y', ossConfig['Window']['Y Position']);
-    ossData.style.add('window', 'rows', ossConfig['Window']['Rows']);
-    ossData.style.add('window', 'columns', ossConfig['Window']['Columns']);
+  // +----------------------------------------------------------------------------------+
+  // | [Setup] Set Configuration
+  // +----------------------------------------------------------------------------------+
 
-    ossData.style.add('item', 'align', ossConfig['Item']['Text Align']);
-    ossData.style.add('item', 'width', ossConfig['Item']['Width']);
-    ossData.style.add('item', 'spacing', ossConfig['Item']['Spacing']);
+    ossData.style = new ossObject.Ossra_ChoiceStyle();
+
+    ossData.style.add('window', 'x', ossConfig.window.x);
+    ossData.style.add('window', 'y', ossConfig.window.y);
+    ossData.style.add('window', 'rows', ossConfig.window.rows);
+    ossData.style.add('window', 'columns', ossConfig.window.columns);
+
+    ossData.style.add('item', 'align', ossConfig.item.textAlign);
+    ossData.style.add('item', 'width', ossConfig.item.width);
+    ossData.style.add('item', 'spacing', ossConfig.item.spacing);
 
   })();                                                                              // }
 
 
 
-  (function($) {                                                                     // {
+  (function() {                                                                      // {
 
   // +=================================================|               Game_Interpreter |
   // | [Object] Game_Interpreter
@@ -402,19 +419,12 @@ Ossra.Command  = Ossra.Command  || [];
         Ossra.Share.pluginCommand.call(this, command, args);
 
         if (command === 'ossra') {
-          var path = Ossra.Command.filter(function(command) {
-            return command.plugin === args[0] && command.name === args[1];
-          });
+          command = Ossra.Command.filter(function(element) {
+            return element.plugin === args[0] && element.name === args[1];
+          })[0];
 
-          if (path.length) {
-            var group  = path[0].group;
-            var plugin = path[0].plugin;
-            var name   = path[0].name;
-            var func   = Ossra.Plugin[group][plugin]['Command'][name];
-
-            if (typeof func !== 'undefined') {
-              func.call(this, args.slice(2, args.length));
-            }
+          if (command) {
+            command.func.call(this, args.slice(2, args.length));
           }
         }
 
@@ -430,81 +440,74 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Method] registerPluginCommand
   // +----------------------------------------------------------------------------------+
 
-    function registerPluginCommand (command) {
+    function registerPluginCommand (name, func) {
 
       var namespace = pluginName.split('.');
 
-      var path = {
-        name: command,
+      var command = {
         group: namespace[0],
-        plugin: namespace[1]
+        plugin: namespace[1],
+        name: name,
+        func: func
       };
 
-      Ossra.Command.push(path);
+      Ossra.Command.push(command);
 
     }; // Util ‹‹ registerPluginCommand
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] set
+  // | [Command] set
   // +----------------------------------------------------------------------------------+
 
-    registerPluginCommand('set');
+    registerPluginCommand('set', function(args) {
 
-    $.set = function(args) {
+      if (args.length < 3) return;
 
-      if (args.length >= 3) {
+      try {
+        var section  = args[0];
+        var property = args[1].split(',');
+        var value    = JSON.parse('[' + args[2] + ']');
+        var retain   = args[3] ? args[3].split(',') : [];
 
-        try {
-          var section  = args[0];
-          var property = args[1].split(',');
-          var value    = JSON.parse('[' + args[2] + ']');
-          var retain   = args[3] ? args[3].split(',') : [];
-
-          if (retain.length === 1 && property.length > 1) {
-            retain = Array(property.length).fill(retain[0]);
-          }
-
-          for (var i = 0; i < property.length; i++) {
-            if (value[i] !== undefined) {
-              var _retain = retain[i] ? retain[i] === 'true' : false;
-
-              ossData.style.set(section, property[i], value[i], true, _retain);
-            }
-          }
-        } catch(error) {
-          return;
+        if (retain.length === 1 && property.length > 1) {
+          retain = Array(property.length).fill(retain[0]);
         }
 
+        for (var i = 0; i < property.length; i++) {
+          if (value[i] !== undefined) {
+            var _retain = retain[i] ? retain[i] === 'true' : false;
+
+            ossData.style.set(section, property[i], value[i], true, _retain);
+          }
+        }
+      } catch(error) {
+        return;
       }
 
-    }; // Commands ‹‹ set
+    }); // Commands ‹‹ set
 
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] clear
+  // | [Command] clear
   // +----------------------------------------------------------------------------------+
 
-    registerPluginCommand('clear');
+    registerPluginCommand('clear', function(args) {
 
-    $.clear = function(args) {
+      if (args.length < 1) return;
 
-      if (args.length >= 1) {
+      var section  = args[0];
+      var property = args[1] ? args[1].split(',') : [];
 
-        try {
-          var section  = args[0];
-          var property = args[1].split(',');
-
-          for (var i = 0; i < property.length; i++) {
-            ossData.style.clear(section, property[i], true);
-          }
-        } catch(error) {
-          return;
+      if (property.length > 0) {
+        for (var i = 0; i < property.length; i++) {
+          ossData.style.clear(section, property[i], true);
         }
-
+      } else {
+        ossData.style.clear(section, undefined, true);
       }
 
-    }; // Commands ‹‹ clear
+    }); // Commands ‹‹ clear
 
-  })(ossCommand);                                                                    // }
+  })();                                                                              // }
 
 
 
@@ -515,6 +518,7 @@ Ossra.Command  = Ossra.Command  || [];
   // +==================================================================================+
 
     var $win = setNamespace(ossWindow, 'Window_ChoiceList');
+    var _fnc = setNamespace(ossFunc, 'Window_ChoiceList');
 
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updatePlacement
@@ -585,7 +589,10 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('window', 'columns');
 
       if (style.enabled) {
-        var width = (this.maxChoiceWidth() * this.maxCols()) + (this.padding * 2);
+        var maxWidth = this.maxChoiceWidth();
+        var maxCols  = this.maxCols();
+        var padding  = this.padding;
+        var width    = (maxWidth * maxCols) + (padding * 2);
 
         return width;
       } else {
@@ -637,10 +644,7 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'spacing');
 
       if (style.enabled) {
-        var constructor = style.value.constructor === Array;
-        var value       = constructor ? style.value[0] : style.value;
-
-        return value;
+        return _fnc.getSpacing(0);
       } else {
         return $win.spacing.call(this);
       }
@@ -659,15 +663,15 @@ Ossra.Command  = Ossra.Command  || [];
 
       if (style.enabled) {
         if (rect.y > 0) {
-          var maxCols     = this.maxCols();
-          var constructor = style.value.constructor === Array;
-          var value       = constructor ? style.value[1] : style.value;
+          var maxCols = this.maxCols();
+          var spacing = (_fnc.getSpacing(1) * Math.floor(index / maxCols));
 
-          rect.y = rect.y + (value * Math.floor(index / maxCols));
+          rect.y = rect.y + spacing;
         }
       }
 
       return rect;
+
     }; // Window_ChoiceList << itemRect
 
   // ALIAS -----------------------------------------------------------------------------+
@@ -715,10 +719,9 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'spacing');
 
       if (style.enabled) {
-        var height      = $win.contentsHeight.call(this);
-        var constructor = style.value.constructor === Array;
-        var value       = constructor ? style.value[1] : style.value;
-        var spacing     = Math.floor(value * (this.numVisibleRows() - 1));
+        var height  = $win.contentsHeight.call(this);
+        var numRows = this.numVisibleRows();
+        var spacing = Math.floor(_fnc.getSpacing(1) * (numRows - 1));
 
         return height + spacing;
       } else {
@@ -738,22 +741,36 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('item', 'spacing');
 
       if (style.enabled) {
-        var height      = (numLines * this.lineHeight()) + (this.standardPadding() * 2);
-        var constructor = style.value.constructor === Array;
-        var value       = constructor ? style.value[1] : style.value;
-        var spacing     = (value * (numLines - 1));
+        var lineHeight = this.lineHeight();
+        var padding    = this.standardPadding();
+        var height     = (numLines * lineHeight) + (padding * 2);
+        var spacing    = (_fnc.getSpacing(1) * (numLines - 1));
 
         return height + spacing;
       } else {
         return $win.fittingHeight.call(this, numLines);
       }
+
     }; // Window_ChoiceList << fittingHeight
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] getSpacing
+  // +----------------------------------------------------------------------------------+
+
+    _fnc.getSpacing = function(direction) {
+
+      var style = ossData.style.get('item', 'spacing');
+      var value = style.value;
+
+      return Array.isArray(value) ? value[direction] : value;
+
+    }; // Window_ChoiceList << getSpacing
 
   })(Window_ChoiceList);                                                             // }
 
 
 
-})('Window.ChoiceList', 1.30);                                                       // }
+})('Window.ChoiceList', 1.32);                                                       // }
 
 
 
