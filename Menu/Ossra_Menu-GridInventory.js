@@ -247,10 +247,10 @@
  *
  * @param lines
  * @text Text Lines
- * @desc Number of Text Lines displayed by the Item Help Window.
- * Set value to 0 to hide the Item Help Window.
+ * @desc Number of Text Lines displayed by the Select Item Window.
  * @type number
  * @default 4
+ * @min 1
  */
 // +====================================================================================+
 
