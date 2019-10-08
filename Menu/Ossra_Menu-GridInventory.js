@@ -2,8 +2,18 @@
 // |||  Menu | Grid Inventory
 // +====================================================================================+
 /*:
- *  @plugindesc [1.10] Creates a Grid Inventory.
+ *  @plugindesc [1.13] Creates a Grid Inventory.
  *  @author Ossra
+ *
+ * @help
+ * ==| Plugin                  |=================================================
+ *
+ *   - Author  : Ossra
+ *   - Contact : garden.of.ossra [at] gmail
+ *   - Version : 1.13 [RPG Maker MV 1.6.2]
+ *   - Release : 2nd September 2019
+ *   - Updated : 8th October 2019
+ *   - License : Free for Commercial and Non-Commercial Usage
  *
  * @param headerGridInventory
  * @text Grid Inventory
@@ -12,25 +22,25 @@
  *
  * @param category
  * @text Item Category Window
- * @desc Options for the item category window.
+ * @desc Options for the Item Category Window.
  * @parent headerGridInventory
  * @type struct<windowItemCategory>
  *
  * @param list
  * @text Item List Window
- * @desc Options for the item list window.
+ * @desc Options for the Item List Window.
  * @parent headerGridInventory
  * @type struct<windowItemList>
  *
  * @param help
  * @text Item Help Window
- * @desc Options for the item help window.
+ * @desc Options for the Item Help Window.
  * @parent headerGridInventory
  * @type struct<windowHelp>
  *
  * @param select
  * @text Select Item Window
- * @desc Options for the select item window.
+ * @desc Options for the Select Item Window.
  * @parent headerGridInventory
  * @type struct<windowSelectItem>
  *
@@ -44,17 +54,9 @@
  * @desc Global identification tag for internal use only. Do not change.
  * @parent pluginData
  * @default ossra-b5cjfd4wCKzSaOf
- *
- * @help
- * ==| Plugin                  |=================================================
- *
- *   - Author  : Ossra
- *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.10 [RPG Maker MV 1.6.2]
- *   - Release : 2nd September 2019
- *   - Updated : 6th October 2019
- *   - License : Free for Commercial and Non-Commercial Usage
  */
+// +===================================================|                        Structs |
+// | [Plugin] Structs
 // +====================================================================================+
 /*~struct~windowItemCategory:
  * @param x
@@ -84,8 +86,10 @@
  * @param columns
  * @text Columns
  * @desc Number of Columns shown by the Item Category Window.
+ * Default: -1 (Use Default Columns).
  * @type number
- * @default 1
+ * @default -1
+ * @min -1
  */
  /*~struct~windowItemList:
  * @param x
@@ -122,29 +126,31 @@
  *
  * @param text
  * @text Item Text
+ * @desc Options for Item Text in all Item List Windows.
  * @type struct<itemListText>
  *
  * @param icon
  * @text Item Icon
+ * @desc Options for Item Icons in all Item List Windows.
  * @type struct<itemListIcon>
  */
  /*~struct~itemListText:
  * @param x
  * @text Adjust X
- * @desc X Adjustment applied to the List Item Text. Negative values are accepted.
+ * @desc X Adjustment for the List Item Text. Negative values are accepted.
  * @type number
  * @default 0
  * @min -999999
  *
  * @param y
  * @text Adjust Y
- * @desc Y Adjustment applied to the List Item Text. Negative values are accepted.
+ * @desc Y Adjustment for the List Item Text. Negative values are accepted.
  * @type number
  * @default 0
  * @min -999999
  *
  * @param size
- * @text Font Size
+ * @text Size
  * @desc Font Size of the List Item Text.
  * Default: -1 (Use Default Font Size).
  * @type number
@@ -152,13 +158,34 @@
  * @min -1
  *
  * @param color
- * @text Text Color
- * @desc Text Color of the List Item Text. Use Hex Color Codes.
+ * @text Color
+ * @desc Font Color of the List Item Text. Use any valid CSS color values.
  * @type text
  * @default #ffffff
  *
+ * @param italics
+ * @text Italics
+ * @desc Enable or Disable Italics for List Item Text.
+ * @type boolean
+ * @on Enable
+ * @off Disable
+ * @default false
+ *
+ * @param outlineWidth
+ * @text Outline Width
+ * @desc Outline Width of the List Item Text.
+ * @type number
+ * @default -1
+ * @min -1
+ *
+ * @param outlineColor
+ * @text Outline Color
+ * @desc Outline Color of the List Item Text. Use any valid CSS color values.
+ * @type text
+ * @default rgba(0, 0, 0, 0.5)
+ *
  * @param align
- * @text Text Alignment
+ * @text Alignment
  * @desc Text Alignment of the List Item Text.
  * @type select
  * @option Left
@@ -248,9 +275,10 @@
  * @param lines
  * @text Text Lines
  * @desc Number of Text Lines displayed by the Select Item Window.
+ * Default: -1 (Use Default Lines).
  * @type number
- * @default 4
- * @min 1
+ * @default -1
+ * @min -1
  */
 // +====================================================================================+
 
@@ -328,6 +356,8 @@ Ossra.Command  = Ossra.Command  || [];
   var ossCommand  = setNamespace(ossPlugin, 'Command');
   var ossFunc     = setNamespace(ossPlugin, 'Function');
 
+
+
   (function() {                                                                      // {
 
   // +=================================================|                      Functions |
@@ -401,7 +431,7 @@ Ossra.Command  = Ossra.Command  || [];
   // +==================================================================================+
 
   // +----------------------------------------------------------------------------------+
-  // | [Setup] Create Defaults
+  // | [Setup] Set Defaults
   // +----------------------------------------------------------------------------------+
     var ossDefaults = {
 
@@ -410,7 +440,7 @@ Ossra.Command  = Ossra.Command  || [];
         'x': -1,
         'y': -1,
         'width': -1,
-        'columns': 1
+        'columns': -1
       },
       'list':
       {
@@ -424,6 +454,9 @@ Ossra.Command  = Ossra.Command  || [];
           'y': 0,
           'size': -1,
           'color': '#ffffff',
+          'italics': false,
+          'outlineWidth': -1,
+          'outlineColor': 'rgba(0, 0, 0, 0.5)',
           'align': 'right'
         },
         'icon':
@@ -445,10 +478,10 @@ Ossra.Command  = Ossra.Command  || [];
         'x': -1,
         'y': -1,
         'width': -1,
-        'lines': 4
+        'lines': -1
       }
 
-    }
+    };
 
   // +----------------------------------------------------------------------------------+
   // | [Setup] Parse Parameters
@@ -466,7 +499,7 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Plugin] Window_ItemCategory
   // +==================================================================================+
 
-    var $win = setNamespace(ossObject, 'Window_ItemCategory');
+    var $win = setNamespace(ossWindow, 'Window_ItemCategory');
 
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] maxCols
@@ -494,7 +527,7 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Plugin] Window_ItemList
   // +==================================================================================+
 
-    var $win = setNamespace(ossObject, 'Window_ItemList');
+    var $win = setNamespace(ossWindow, 'Window_ItemList');
 
   // OVERWRITE -------------------------------------------------------------------------+
   // | [Method] maxCols
@@ -600,6 +633,13 @@ Ossra.Command  = Ossra.Command  || [];
           this.changeTextColor(ossConfig.list.text.color);
         }
 
+        if (ossConfig.list.text.outlineWidth > -1) {
+          this.contents.outlineWidth = ossConfig.list.text.outlineWidth;
+        }
+
+        this.contents.fontItalic   = ossConfig.list.text.italics;
+        this.contents.outlineColor = ossConfig.list.text.outlineColor;
+
         this.drawText($gameParty.numItems(item), x, y, width, textAlign);
         this.resetTextColor();
       }
@@ -629,7 +669,7 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Plugin] Window_EventItem
   // +==================================================================================+
 
-    var $win = setNamespace(ossObject, 'Window_EventItem');
+    var $win = setNamespace(ossWindow, 'Window_EventItem');
 
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updatePlacement
@@ -669,7 +709,7 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Plugin] Scene_Item
   // +==================================================================================+
 
-    var $scn = setNamespace(ossObject, 'Scene_Item');
+    var $scn = setNamespace(ossScene, 'Scene_Item');
 
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] createCategoryWindow
@@ -761,7 +801,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Menu.GridInventory', 1.10);                                                      // }
+})('Menu.GridInventory', 1.13);                                                      // }
 
 
 
