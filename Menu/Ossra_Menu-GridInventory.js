@@ -2,7 +2,7 @@
 // |||  Menu | Grid Inventory
 // +====================================================================================+
 /*:
- *  @plugindesc [1.13] Creates a Grid Inventory.
+ *  @plugindesc [1.17] Creates a Grid Inventory.
  *  @author Ossra
  *
  * @help
@@ -10,7 +10,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.13 [RPG Maker MV 1.6.2]
+ *   - Version : 1.17 [RPG Maker MV 1.6.2]
  *   - Release : 2nd September 2019
  *   - Updated : 8th October 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -163,8 +163,23 @@
  * @type text
  * @default #ffffff
  *
+ * @param opacity
+ * @text Opacity
+ * @desc Opacity of the List Item Text.
+ * @type number
+ * @default 255
+ * @max 255
+ *
+ * @param bold
+ * @text Bold
+ * @desc Enable or Disable Bold for List Item Text.
+ * @type boolean
+ * @on Enable
+ * @off Disable
+ * @default false
+ *
  * @param italics
- * @text Italics
+ * @text Italic
  * @desc Enable or Disable Italics for List Item Text.
  * @type boolean
  * @on Enable
@@ -454,7 +469,9 @@ Ossra.Command  = Ossra.Command  || [];
           'y': 0,
           'size': -1,
           'color': '#ffffff',
+          'opacity': 255,
           'italics': false,
+          'bold': false,
           'outlineWidth': -1,
           'outlineColor': 'rgba(0, 0, 0, 0.5)',
           'align': 'right'
@@ -528,6 +545,38 @@ Ossra.Command  = Ossra.Command  || [];
   // +==================================================================================+
 
     var $win = setNamespace(ossWindow, 'Window_ItemList');
+    var _fnc = setNamespace(ossFunc, 'Window_ItemList');
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] createContents
+  // +----------------------------------------------------------------------------------+
+
+    $win.createContents = $.prototype.createContents;
+      
+    $.prototype.createContents = function() {
+
+      Window_Selectable.prototype.createContents.call(this);
+
+      this.contents._makeFontNameText = _fnc.getFontStyle.bind(this);
+
+    }; // Window_ItemList ‹‹ createContents
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] getFontStyle
+  // +----------------------------------------------------------------------------------+
+
+    _fnc.getFontStyle = function() {
+
+      var fontFace   = this.contents.fontFace;
+      var fontSize   = this.contents.fontSize;
+      var fontItalic = ossConfig.list.text.italics;
+      var fontBold   = ossConfig.list.text.bold;
+
+      return (fontItalic ? 'Italic ' : '') +
+             (fontBold ? 'Bold ' : '') +
+              fontSize + 'px ' + fontFace;
+
+    }; // Window_ItemList << getFontStyle
 
   // OVERWRITE -------------------------------------------------------------------------+
   // | [Method] maxCols
@@ -637,8 +686,13 @@ Ossra.Command  = Ossra.Command  || [];
           this.contents.outlineWidth = ossConfig.list.text.outlineWidth;
         }
 
-        this.contents.fontItalic   = ossConfig.list.text.italics;
-        this.contents.outlineColor = ossConfig.list.text.outlineColor;
+        if (ossConfig.list.text.outlineColor !== '') {
+          this.contents.outlineColor = ossConfig.list.text.outlineColor;
+        }
+
+        if (ossConfig.list.text.opacity < 255) {
+          this.contents.paintOpacity = ossConfig.list.text.opacity;
+        }
 
         this.drawText($gameParty.numItems(item), x, y, width, textAlign);
         this.resetTextColor();
@@ -801,7 +855,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Menu.GridInventory', 1.13);                                                      // }
+})('Menu.GridInventory', 1.17);                                                      // }
 
 
 
