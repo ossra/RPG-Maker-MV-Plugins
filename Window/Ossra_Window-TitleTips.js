@@ -139,7 +139,7 @@
  * @param wait
  * @text Tip Wait
  * @desc Amount of time to wait before displaying the next tip.
- * Use a value of -1 for an indefinite wait. Value is in frames.
+ * Use -1 for an indefinite wait. Value is in frames.
  * @type number
  * @default 600
  * @min -1
