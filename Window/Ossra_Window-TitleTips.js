@@ -27,7 +27,7 @@
  * @type struct<windowOptions>
  *
  * @param style
- * @text Tip Text
+ * @text Tip Style
  * @desc Text style of the tips.
  * @parent _pluginOptions
  * @type struct<styleOptions>
