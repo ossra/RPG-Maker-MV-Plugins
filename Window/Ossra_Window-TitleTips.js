@@ -136,8 +136,8 @@
  * @min -1
  */
 /*~struct~dataTip:
- * @param wait
- * @text Tip Wait
+ * @param duration
+ * @text Tip Duration
  * @desc Amount of time to wait before displaying the next tip.
  * Use -1 for an indefinite wait. Value is in frames.
  * @type number
@@ -255,16 +255,21 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.getColor = function (param) {
 
-      var obj = { hex: 0, array: [0,0,0,255], val: '000000' };
+      var obj = {
+        hex:  0,
+        rgb:  [0,0,0],
+        rgba: [0,0,0,255],
+        raw:  '#000000'
+      };
 
-      if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(param)) {
-        obj.val   = RegExp.$1;
+      if (/^#([0-9a-f]{6})$/i.test(param)) {
+        obj.raw  = param;
+        obj.hex  = parseInt('0x' + RegExp.$1);
 
-        obj.hex   = parseInt('0x' + obj.val);
-
-        obj.array = obj.val.length === 3 ? obj.val.match(/.{1}/g) : obj.val.match(/.{2}/g);
-        obj.array = obj.array.map(function(color) { return parseInt('0x' + color); });
-        obj.array.push(255);
+        obj.rgb  = PIXI.utils.hex2rgb(obj.hex, [0,0,0]);
+        obj.rgb  = obj.rgb.map(function(e) { return e * 255; });
+        obj.rgba = PIXI.utils.hex2rgb(obj.hex, [0,0,0,1]);
+        obj.rgba = obj.rgba.map(function(e) { return e * 255; });
       }
 
       return obj;
@@ -370,7 +375,7 @@ Ossra.Command  = Ossra.Command  || [];
       'data':
       [
         {
-          'wait': -1,
+          'duration': -1,
           'text': '[Empty Tip Text]'
         }
       ],
@@ -483,14 +488,14 @@ Ossra.Command  = Ossra.Command  || [];
       var tip = this._data[id];
 
       if (tip) {
-        var wait = tip.wait;
-        var text = tip.text;
+        var duration = tip.duration;
+        var text     = tip.text;
       } else {
-        var wait = -1;
-        var text = '[Empty Tip Text]';
+        var duration = -1;
+        var text     = '[Empty Tip Text]';
       }
 
-      this.setTimer(wait);
+      this.setTimer(duration);
       this.setText(text);
 
     }; // Window_TitleTips ‹‹ setTip
@@ -521,7 +526,7 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.normalColor = function() {
 
-      return '#' + this._options.fontColor.val;
+      return this._options.fontColor.raw;
 
     }; // Window_TitleTips ‹‹ normalColor
 
