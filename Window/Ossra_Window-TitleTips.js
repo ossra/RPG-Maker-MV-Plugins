@@ -364,7 +364,7 @@ Ossra.Command  = Ossra.Command  || [];
       'style':
       {
         'size': -1,
-        'color': ossFunc.getColor(),
+        'color': ossFunc.getColor('#ffffff'),
         'lineHeight': -1
       },
       'data':
