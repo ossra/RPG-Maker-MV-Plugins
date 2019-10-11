@@ -17,6 +17,7 @@
     this.__scrollCount = 0;
     this.__scrollMode  = 0;
     this.__maxScroll   = 0;
+    this.__curScroll   = 0;
 
   };
 
@@ -31,13 +32,23 @@
     tempAlias_WindowBase_update.call(this);
 
     if (this.__scrollMode === 1) {
-      if (Math.abs(this._windowContentsSprite.origin.x) < this.__maxScroll) {
+      this.__curScroll++;
+
+      if ((this.__maxScroll - this.__curScroll) > this.contentsWidth()) {
         this._windowContentsSprite.origin.x += -this.__scrollSpeed;
       } else {
-        this._windowContentsSprite.origin.x = 0;
+        this.__curScroll  = 0;
         this.__scrollMode = 2;
       }
     } else if (this.__scrollMode === 2) {
+      if (this.__scrollCount < this.__scrollWait) {
+        this.__scrollCount++;
+      } else {
+        this._windowContentsSprite.origin.x = 0;
+        this.__scrollMode = 3;
+        this.__scrollCount = 0;
+      }
+    } else if (this.__scrollMode === 3) {
       if (this.__scrollCount < this.__scrollWait) {
         this.__scrollCount++;
       } else {
@@ -82,7 +93,7 @@
 
     this._windowContentsSprite = new TilingSprite();
     this._windowContentsSprite.move(cPadding, cPadding, cWidth, cHeight);
-    this._windowContentsSprite.bitmap = new Bitmap(Math.max(tWidth * 2, cWidth), cHeight);
+    this._windowContentsSprite.bitmap = new Bitmap(Math.max(tWidth, cWidth) + 5, cHeight);
 
     this.addChildAt(this._windowContentsSprite, sIndex);
 
@@ -152,7 +163,7 @@
       var text  = textState.text;
 
       this.__scrollWait = wait;
-      this.__maxScroll  = width + this.contents.fontSize;
+      this.__maxScroll  = width + 5;
       this.__scrollMode = 2;
 
       this.createScrollContents(width, speed);
