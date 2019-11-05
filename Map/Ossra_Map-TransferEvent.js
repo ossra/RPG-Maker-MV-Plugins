@@ -22,7 +22,7 @@
  *
  * @param tags
  * @text Custom Map Tags
- * @desc Options for execution of events for each map.
+ * @desc Options for custom map tags.
  * @parent headerPluginOptions
  * @type struct<tagEvents>[]
  *
@@ -44,7 +44,7 @@
 /*~struct~tagEvents:
  * @param name
  * @text Name
- * @desc Mame of the map event tag.
+ * @desc Name of the map event tag.
  * @type text
  *
  * @param enter
