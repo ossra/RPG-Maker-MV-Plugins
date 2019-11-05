@@ -49,13 +49,13 @@
  *
  * @param enter
  * @text Enter Event
- * @desc Options for the map enter event.
+ * @desc ID of the map enter event.
  * @type common_event
  * @default 0
  *
  * @param exit
  * @text Exit Event
- * @desc Options for the map exit event.
+ * @desc ID of the map exit event.
  * @type common_event
  * @default 0
  */
