@@ -2,7 +2,7 @@
 // |||  Map | Event On Transfer
 // +====================================================================================+
 /*:
- * @plugindesc [1.17] Run a specified common event when entering or exiting a map.
+ * @plugindesc [1.18] Run a specified common event when entering or exiting a map.
  * @author Ossra
  *
  * @help
@@ -10,7 +10,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.17 [RPG Maker MV 1.6.2]
+ *   - Version : 1.18 [RPG Maker MV 1.6.2]
  *   - Release : 6th July 2016
  *   - Updated : 4th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -340,9 +340,10 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.updateTransferPlayer = function() {
 
-      if ($gamePlayer.isTransferring() && ossData.exitEventId > 0) {
+      if ($gamePlayer.isTransferring() && ossData.exitEventId > 0 &&
+          $gamePlayer.newMapId() !== $gameMap.mapId()) {
 
-        if ($gamePlayer.newMapId() !== $gameMap.mapId() && !ossData.runEvent) {
+        if (!ossData.runEvent) {
           var exitEvent = $dataCommonEvents[ossData.exitEventId];
 
           if (exitEvent) {
@@ -367,7 +368,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Map.EventOnTransfer', 1.17);                                                     // }
+})('Map.EventOnTransfer', 1.18);                                                     // }
 
 
 
