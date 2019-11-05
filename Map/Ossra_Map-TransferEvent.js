@@ -2,28 +2,62 @@
 // |||  Map | Event On Transfer
 // +====================================================================================+
 /*:
- * @plugindesc [1.12] Run a specified common event when entering or exiting a map.
+ * @plugindesc [1.17] Run a specified common event when entering or exiting a map.
  * @author Ossra
- *
- * @param Plugin Data
- * @type text
- * @default ------------------------------------
- *
- * @param Global Identifier
- * @parent Plugin Data
- * @desc Global identification tag for internal use only. Do not edit.
- * @type text
- * @default ossra-AHqAOeLogbadvlV
  *
  * @help
  * ==| Plugin Information      |=================================================
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.12
+ *   - Version : 1.17 [RPG Maker MV 1.6.2]
  *   - Release : 6th July 2016
- *   - Updated : 14th September 2019
+ *   - Updated : 4th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
+ *
+ * @param headerPluginOptions
+ * @text Plugin Options
+ * @type text
+ * @default ------------------------------------
+ *
+ * @param tags
+ * @text Custom Map Tags
+ * @desc Options for execution of events for each map.
+ * @parent headerPluginOptions
+ * @type struct<tagEvents>[]
+ *
+ * @param pluginData
+ * @text Plugin Data
+ * @type text
+ * @default ------------------------------------
+ *
+ * @param gid
+ * @text Global Identifier
+ * @desc Global identification tag for internal use only. Do not change.
+ * @parent pluginData
+ * @default ossra-AHqAOeLogbadvlV
+ *
+ */
+// +===================================================|                        Structs |
+// | [Plugin] Structs
+// +====================================================================================+
+/*~struct~tagEvents:
+ * @param name
+ * @text Name
+ * @desc Mame of the map event tag.
+ * @type text
+ *
+ * @param enter
+ * @text Enter Event
+ * @desc Options for the map enter event.
+ * @type common_event
+ * @default 0
+ *
+ * @param exit
+ * @text Exit Event
+ * @desc Options for the map exit event.
+ * @type common_event
+ * @default 0
  */
 // +====================================================================================+
 
@@ -105,17 +139,107 @@ Ossra.Command  = Ossra.Command  || [];
 
   (function() {                                                                      // {
 
+  // +=================================================|                      Functions |
+  // | [Setup] Functions
+  // +==================================================================================+
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] getPlugin
+  // +----------------------------------------------------------------------------------+
+
+    function getPlugin (gid) {
+
+      return $plugins.filter(function(plugin) {
+        return plugin.parameters['gid'] === gid;
+      })[0]['parameters'];
+
+    }; // Setup << getPlugin
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] parseAllParameters
+  // +----------------------------------------------------------------------------------+
+
+    function parseAllParameters (input, defaults) {
+
+      Object.keys(input).forEach(function(key) {
+        if (typeof defaults[key] === 'undefined') {
+          delete input[key];
+        } else {
+          try {
+            input[key] = JSON.parse(input[key], function(_key, _value) {
+              if (/^(\w+)__(\w+)$/i.test(_key)) {
+                this[RegExp.$1] = ossFunc[RegExp.$2].call(this, _value);
+              } else {
+                return _value;
+              }
+            });
+
+            if (Array.isArray(input[key])) {
+              for (var i = 0; i < input[key].length; i++) {
+                input[key][i] = JSON.parse(input[key][i]);
+                input[key][i] = parseAllParameters(input[key][i], defaults[key][0]);
+              }
+            } else {
+              parseAllParameters(input[key], defaults[key]);
+            }
+          } catch (e) {
+            if (input[key] === '') input[key] = defaults[key];
+          }
+        }
+      });
+
+      return input;
+
+    }; // Setup << parseAllParameters
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] createConfig
+  // +----------------------------------------------------------------------------------+
+
+    function createConfig (gid, defaults) {
+
+      var parameters = getPlugin(gid);
+      parameters     = parseAllParameters(parameters, defaults);
+
+      Object.assign(ossConfig, parameters);
+
+    }; // Setup << createConfig
+
   // +=================================================|                  Configuration |
   // | [Setup] Configuration
   // +==================================================================================+
 
-    ossRegExp.note        = { };
-    ossRegExp.note.single = /<ossra EventOnTransfer (enter|exit) (\d+)>/i;
-    ossRegExp.note.global = /<ossra EventOnTransfer (enter|exit) (\d+)>/gi;
+  // +----------------------------------------------------------------------------------+
+  // | [Setup] Create Defaults
+  // +----------------------------------------------------------------------------------+
 
-    ossData.enterEventId = 0;
-    ossData.exitEventId  = 0;
-    ossData.runEvent     = false;
+    var ossDefaults = {
+
+      'tags':
+      [
+        {
+          'name': null,
+          'enter': 0,
+          'exit': 0
+        }
+      ]
+
+    };
+
+  // +----------------------------------------------------------------------------------+
+  // | [Setup] Create Configuration
+  // +----------------------------------------------------------------------------------+
+
+    createConfig('ossra-AHqAOeLogbadvlV', ossDefaults);
+
+    ossRegExp.note        = { };
+    ossRegExp.note.global = /<(.+)>/gi;
+    ossRegExp.note.custom = /<(.+)>/i;
+    ossRegExp.note.single = /<ossra EventOnTransfer (enter|exit) (\d+)>/i;
+
+    ossData.enterEventId  = 0;
+    ossData.exitEventId   = 0;
+    ossData.runEvent      = false;
 
   })();                                                                              // }
 
@@ -171,12 +295,23 @@ Ossra.Command  = Ossra.Command  || [];
     _fnc.setupNote = function() {
 
       if ($dataMap) {
-        var notes  = $dataMap.note.match(ossRegExp.note.global);
+        var notes = $dataMap.note.match(ossRegExp.note.global);
 
         if (notes) {
           notes.forEach(function(data) {
             if (ossRegExp.note.single.test(data)) {
               ossData[RegExp.$1 + 'EventId'] = Number(RegExp.$2);
+            }
+
+            if (ossRegExp.note.custom.test(data)) {
+              var event = ossConfig.tags.filter(function(tag) {
+                return RegExp.$1 === tag.name;
+              })[0];
+
+              if (event) {
+                ossData['enterEventId'] = event.enter;
+                ossData['exitEventId']  = event.exit;
+              }
             }
           });
         }
@@ -232,7 +367,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Map.EventOnTransfer', 1.12);                                                     // }
+})('Map.EventOnTransfer', 1.17);                                                     // }
 
 
 
