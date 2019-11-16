@@ -81,6 +81,12 @@
 
 
 
+if (!Imported.YEP_BattleEngineCore) {
+  throw '[ERROR] YEP_BattleEngineCore is required to use this plugin.';
+}
+
+
+
 // +===================================================|                      Namespace |
 // | [Global] Namespace
 // +====================================================================================+
