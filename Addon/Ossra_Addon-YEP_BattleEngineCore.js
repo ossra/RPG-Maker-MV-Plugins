@@ -2,7 +2,7 @@
 // |||  Addon | YEP_BattleEngineCore
 // +====================================================================================+
 /*:
- * @plugindesc [1.00] Various addon features for the YEP_BattleEngineCore plugin.
+ * @plugindesc [1.02] Various addon features for the YEP_BattleEngineCore plugin.
  * @author Ossra
  *
  * @help
@@ -10,9 +10,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.00 [RPG Maker MV 1.6.2]
+ *   - Version : 1.02 [RPG Maker MV 1.6.2]
  *   - Release : 15th November 2019
- *   - Updated : 15th November 2019
+ *   - Updated : 16th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * @param optionsEnemySelect
@@ -353,7 +353,7 @@ Ossra.Command  = Ossra.Command  || [];
 
       var color = this.normalColor();
 
-      for (var c = 0; c < ossConfig.colorFont.length + 1; c++) {
+      for (var c = 0; c < ossConfig.colorFont.length; c++) {
         var data  = ossConfig.colorFont[c];
 
         if (data) {
@@ -364,20 +364,15 @@ Ossra.Command  = Ossra.Command  || [];
               color = data.options.custom.raw;
             }
 
-            if (this.contents.textColor !== color) {
-              this.changeTextColor(color);
-              this._requestRefresh = true;
-            }
-
             break;
-          }
-        } else {
-          if (this.contents.textColor !== color) {
-            this.changeTextColor(color);
-            this._requestRefresh = true;
           }
         }
 
+      }
+
+      if (this.contents.textColor !== color) {
+        this.changeTextColor(color);
+        this._requestRefresh = true;
       }
 
     }; // Window_EnemyVisualSelect << updateFontColor
@@ -386,7 +381,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Addon.YEP_BattleEngineCore', 1.00);                                              // }
+})('Addon.YEP_BattleEngineCore', 1.02);                                              // }
 
 
 
