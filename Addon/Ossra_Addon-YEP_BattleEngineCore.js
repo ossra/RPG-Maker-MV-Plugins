@@ -56,7 +56,7 @@
 /*~struct~colorData:
  * @param type
  * @text Color Type
- * @desc The type of color to be used. 
+ * @desc The type of color to be used.
  * @type select
  * @option WindowSkin Color
  * @value 0
@@ -326,33 +326,55 @@ Ossra.Command  = Ossra.Command  || [];
     var $win = setNamespace(ossWindow, 'Window_EnemyVisualSelect');
 
   // ALIAS -----------------------------------------------------------------------------+
-  // | [Method] refresh
+  // | [Method] updateRefresh
   // +----------------------------------------------------------------------------------+
 
-    $win.refresh = $.prototype.refresh;
-  
-    $.prototype.refresh = function() {
+    $win.updateRefresh = $.prototype.updateRefresh;
 
-      for (var c = 0; c < ossConfig.colorFont.length; c++) {
-        var data = ossConfig.colorFont[c];
+    $.prototype.updateRefresh = function() {
 
-        if (data.trigger.call(this, this._battler)) {
-          var color = this.normalColor();
+      this.updateFontColor();
 
-          if (data.options.type === 0) {
-            color = this.textColor(data.options.window);
-          } else if (data.options.type === 1) {
-            color = data.options.custom.raw;
+      $win.updateRefresh.call(this);
+
+    }; // Window_EnemyVisualSelect << updateRefresh
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] updateFontColor
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.updateFontColor = function() {
+
+      var color = this.normalColor();
+
+      for (var c = 0; c < ossConfig.colorFont.length + 1; c++) {
+        var data  = ossConfig.colorFont[c];
+
+        if (data) {
+          if (data.trigger.call(this, this._battler)) {
+            if (data.options.type === 0) {
+              color = this.textColor(data.options.window);
+            } else if (data.options.type === 1) {
+              color = data.options.custom.raw;
+            }
+
+            if (this.contents.textColor !== color) {
+              this.changeTextColor(color);
+              this._requestRefresh = true;
+            }
+
+            break;
           }
-
-          this.changeTextColor(color);
-          break;
+        } else {
+          if (this.contents.textColor !== color) {
+            this.changeTextColor(color);
+            this._requestRefresh = true;
+          }
         }
+
       }
 
-      $win.refresh.call(this);
-
-    }; // Scene_Boot << start
+    }; // Window_EnemyVisualSelect << updateFontColor
 
   })(Window_EnemyVisualSelect);                                                      // }
 
