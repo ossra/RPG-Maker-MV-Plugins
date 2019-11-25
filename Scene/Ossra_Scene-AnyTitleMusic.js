@@ -209,8 +209,11 @@ Ossra.Command  = Ossra.Command  || [];
 
       try {
         var _key, _fnc, _val;
+
         return JSON.parse(json, function(key, value) {
-          [_key, _fnc] = key.split('__');
+          var _arr = key.split('__');
+          _key     = _arr[0];
+          _val     = _arr[1];
           var _def = defaults[_key];
           _val = value !== '' ? value : _def;
 
