@@ -305,7 +305,7 @@ Ossra.Command  = Ossra.Command  || [];
     $scn.playTitleMusic = $.prototype.playTitleMusic;
 
     $.prototype.playTitleMusic = function() {
-console.log(ossConfig);
+
       if (ossConfig.audio.file.name !== '') {
         AudioManager.stopAll();
 
