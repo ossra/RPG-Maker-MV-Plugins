@@ -2,7 +2,7 @@
 // |||  Scene | Any Title Music
 // +====================================================================================+
 /*:
- * @plugindesc [1.07] Play a selected audio file on the Title Screen
+ * @plugindesc [1.09] Play a selected audio file on the Title Screen
  * @author Ossra
  *
  * @help
@@ -10,7 +10,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.07 [RPG Maker MV 1.6.2]
+ *   - Version : 1.09 [RPG Maker MV 1.6.2]
  *   - Release : 25th July 2016
  *   - Updated : 25th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -24,7 +24,13 @@
  * @text Audio File
  * @desc The parameters of the audio file.
  * @parent optionsPluginOptions
- * @type struct<optionsMe>
+ * @type struct<optionsAudio>
+ *
+ * @param playIf__evalParam
+ * @text Play Conditional
+ * @desc Javascript evaluated condition when the audio file should be played.
+ * @parent optionsPluginOptions
+ * @type text
  *
  * @param pluginData
  * @text Plugin Data
@@ -41,7 +47,7 @@
 // +===================================================|                        Structs |
 // | [Plugin] Structs
 // +====================================================================================+
-/*~struct~optionsMe:
+/*~struct~optionsAudio:
  * @param file__getType
  * @text File
  * @desc Name of the audio file.
@@ -163,6 +169,22 @@ Ossra.Command  = Ossra.Command  || [];
   // +==================================================================================+
 
   // +----------------------------------------------------------------------------------+
+  // | [Method] evalParam
+  // +----------------------------------------------------------------------------------+
+
+    $.evalParam = function(param) {
+
+      var func = function () {
+        "use strict"
+
+        return eval(param);
+      };
+
+      return func.bind(null);
+
+    }; // Functions << evalParam
+
+  // +----------------------------------------------------------------------------------+
   // | [Method] getType
   // +----------------------------------------------------------------------------------+
 
@@ -276,7 +298,8 @@ Ossra.Command  = Ossra.Command  || [];
         'pitch': 100,
         'pan': 0,
         'pos': 0
-      }
+      },
+      'playIf': ossFunc.evalParam('true')
 
     };
 
@@ -306,7 +329,7 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.playTitleMusic = function() {
 
-      if (ossConfig.audio.file.name !== '') {
+      if (ossConfig.audio.file.name !== '' && ossConfig.playIf()) {
         AudioManager.stopAll();
 
         var data    = AudioManager.makeEmptyAudioObject();
@@ -341,7 +364,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Scene.AnyTitleMusic', 1.07);                                                     // }
+})('Scene.AnyTitleMusic', 1.09);                                                     // }
 
 
 
