@@ -213,7 +213,7 @@ Ossra.Command  = Ossra.Command  || [];
           var _key = _arr[0];
           var _fnc = _arr[1];
           var _def = defaults[_key];
-          _val = value !== '' ? value : _def;
+          var _val = value !== '' ? value : _def;
 
           if (defaults.hasOwnProperty(_key)) {
             if (typeof _fnc !== 'undefined') {
@@ -305,7 +305,7 @@ Ossra.Command  = Ossra.Command  || [];
     $scn.playTitleMusic = $.prototype.playTitleMusic;
 
     $.prototype.playTitleMusic = function() {
-
+console.log(ossConfig);
       if (ossConfig.audio.file.name !== '') {
         AudioManager.stopAll();
 
