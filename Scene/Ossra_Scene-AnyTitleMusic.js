@@ -2,7 +2,7 @@
 // |||  Scene | Any Title Music
 // +====================================================================================+
 /*:
- * @plugindesc [1.09] Play a selected audio file on the Title Screen
+ * @plugindesc [1.12] Play a selected audio file on the Title Screen
  * @author Ossra
  *
  * @help
@@ -10,7 +10,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.09 [RPG Maker MV 1.6.2]
+ *   - Version : 1.12 [RPG Maker MV 1.6.2]
  *   - Release : 25th July 2016
  *   - Updated : 25th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -329,9 +329,9 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.playTitleMusic = function() {
 
-      if (ossConfig.audio.file.name !== '' && ossConfig.playIf()) {
-        AudioManager.stopAll();
+      AudioManager.stopAll();
 
+      if (ossConfig.audio.file.name !== '' && ossConfig.playIf()) {
         var data    = AudioManager.makeEmptyAudioObject();
 
         data.name   = ossConfig.audio.file.name;
@@ -360,11 +360,25 @@ Ossra.Command  = Ossra.Command  || [];
 
     }; // Scene_Title << playTitleMusic
 
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] terminate
+  // +----------------------------------------------------------------------------------+
+
+    $scn.terminate = $.prototype.terminate;
+
+    $.prototype.terminate = function() {
+
+      $scn.terminate.call(this);
+
+      AudioManager.stopAll();
+
+    }; // Scene_Title << terminate
+
   })(Scene_Title);                                                                   // }
 
 
 
-})('Scene.AnyTitleMusic', 1.09);                                                     // }
+})('Scene.AnyTitleMusic', 1.12);                                                     // }
 
 
 
