@@ -2,7 +2,7 @@
 // |||  Scene | Visual Novel (Base)
 // +====================================================================================+
 /*:
- * @plugindesc [0.13A] Adds a Visual Novel scene.
+ * @plugindesc [0.17A] Adds a Visual Novel scene.
  * @author Ossra
  *
  * @help
@@ -10,9 +10,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 0.13A [RPG Maker MV 1.6.2]
+ *   - Version : 0.17A [RPG Maker MV 1.6.2]
  *   - Release : 26th November 2019
- *   - Updated : 26th November 2019
+ *   - Updated : 27th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * @param optionsPluginOptions
@@ -29,6 +29,14 @@
  * @param sceneDefault
  * @text Default Scene
  * @desc The default scene to use.
+ * @parent optionsPluginOptions
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @param mapLoad
+ * @text Load Map
+ * @desc 
  * @parent optionsPluginOptions
  * @type number
  * @default 1
@@ -500,7 +508,8 @@ Ossra.Command  = Ossra.Command  || [];
           'note': ''
         }
       ],
-      'sceneDefault': 0
+      'sceneDefault': 1,
+      'mapLoad': 1,
 
     };
 
@@ -510,7 +519,10 @@ Ossra.Command  = Ossra.Command  || [];
 
     createConfig('ossra-OfbPJETXuTmabIv', ossDefaults);
 
-    ossData.sceneId = Math.max(ossConfig.sceneDefault - 1, 0);
+    ossConfig.scenes.splice(0, 0, null);
+
+    ossData.sceneId = ossConfig.sceneDefault;
+    ossData.mapLoad = ossConfig.mapLoad;
 
   })();                                                                              // }
 
@@ -582,10 +594,11 @@ Ossra.Command  = Ossra.Command  || [];
       var subCommand = args[0];
 
       if (subCommand === 'scene') {
-        var sceneId = Math.max(Number(args[1]) - 1, 0);
+        var sceneId  = Math.max(Number(args[1]), 1);
+        var fadeType = args[2] ? Number(args[1]) : 0;
 
         ossData.sceneId = sceneId;
-        $gamePlayer.reserveTransfer(0,0,0,2,0);
+        $gamePlayer.reserveTransfer(ossData.mapLoad, 0, 0, 2, fadeType);
       }
 
     }); // Commands ‹‹ goto
@@ -688,13 +701,11 @@ Ossra.Command  = Ossra.Command  || [];
 
       Scene_Base.prototype.stop.call(this);
 
+      this._mapNameWindow.close();
+      
       if (SceneManager.isNextScene(Scene_VisualNovel)) {
-        this._mapNameWindow.close();
-
         this.fadeOutForTransfer();
       } else {
-        this._mapNameWindow.close();
-
         if (this.needsSlowFadeOut()) {
           this.startFadeOut(this.slowFadeSpeed(), false);
         } else if ($gamePlayer._transferring && $gamePlayer._newMapId > 0) { // SceneManager.isNextScene(Scene_Map)
@@ -889,7 +900,7 @@ Ossra.Command  = Ossra.Command  || [];
     function Spriteset_VisualNovel () {
       this.initialize.apply(this, arguments);
     }
-    
+
     Spriteset_VisualNovel.prototype = Object.create(Spriteset_Map.prototype);
     Spriteset_VisualNovel.prototype.constructor = Spriteset_VisualNovel;
 
@@ -915,7 +926,7 @@ Ossra.Command  = Ossra.Command  || [];
 
       this.createParallax();
       // this.createTilemap();
-      // this.createCharacters();
+      this.createCharacters();
       // this.createShadow();
       // this.createDestination();
       this.createWeather();
@@ -937,20 +948,16 @@ Ossra.Command  = Ossra.Command  || [];
       this.updateWeather();
 
     }; // Spriteset_VisualNovel << update
-    
+
   // NEW -------------------------------------------------------------------------------+
-  // | [Method] hideCharacters
+  // | [Method] createCharacters
   // +----------------------------------------------------------------------------------+
 
-    $.prototype.hideCharacters = function() {
-    }; // Spriteset_VisualNovel << hideCharacters
-    
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] showCharacters
-  // +----------------------------------------------------------------------------------+
+    $.prototype.createCharacters = function() {
 
-    $.prototype.showCharacters = function() {
-    }; // Spriteset_VisualNovel << showCharacters
+      this._characterSprites = [];
+
+    }; // Spriteset_VisualNovel << createCharacters
 
   })(window);                                                                        // }
 
@@ -965,22 +972,6 @@ Ossra.Command  = Ossra.Command  || [];
     var $scn = setNamespace(ossScene, 'Scene_Map');
 
   // ALIAS -----------------------------------------------------------------------------+
-  // | [Method] terminate
-  // +----------------------------------------------------------------------------------+
-
-    $scn.stop = $.prototype.stop;
-
-    $.prototype.stop = function() {
-
-      if (SceneManager.isNextScene(Scene_VisualNovel)) {
-        this.fadeOutForTransfer();
-      }
-
-      $scn.stop.call(this);
-
-    }; // Scene_Map << stop
-
-  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updateTransferPlayer
   // +----------------------------------------------------------------------------------+
 
@@ -988,7 +979,7 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.updateTransferPlayer = function() {
 
-      if ($gamePlayer.isTransferring() && $gamePlayer._newMapId === 0) {
+      if ($gamePlayer.isTransferring() && $gamePlayer._newMapId === ossData.mapLoad) {
         SceneManager.goto(Scene_VisualNovel);
       } else {
         $scn.updateTransferPlayer.call(this);
@@ -1016,14 +1007,10 @@ Ossra.Command  = Ossra.Command  || [];
 
     $.prototype.onLoadSuccess = function() {
 
-      if ($gameMap._mapId === 0) {
-        SoundManager.playLoad();
-        this.fadeOutAll();
-        this.reloadMapIfUpdated();
+      $scn.onLoadSuccess.call(this);
+
+      if ($gameMap._mapId === ossData.mapLoad) {
         SceneManager.goto(Scene_VisualNovel);
-        this._loadSuccess = true;
-      } else {
-        $scn.onLoadSuccess.call(this);
       }
 
     }; // Scene_Load << onLoadSuccess
@@ -1032,7 +1019,35 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Scene.VisualNovel', 0.13);                                                       // }
+  (function($) {                                                                     // {
+
+  // +=================================================|                    Scene_Title |
+  // | [Plugin] Scene_Title
+  // +==================================================================================+
+
+    var $scn = setNamespace(ossScene, 'Scene_Title');
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] commandNewGame
+  // +----------------------------------------------------------------------------------+
+
+    $scn.commandNewGame = $.prototype.commandNewGame;
+
+    $.prototype.commandNewGame = function() {
+
+      $scn.commandNewGame.call(this);
+
+      if ($gamePlayer.isTransferring() && $gamePlayer._newMapId === ossData.mapLoad) {
+        SceneManager.goto(Scene_VisualNovel);
+      }
+
+    }; // Scene_Title << commandNewGame
+
+  })(Scene_Title);                                                                   // }
+
+
+
+})('Scene.VisualNovel', 0.17);                                                       // }
 
 
 
