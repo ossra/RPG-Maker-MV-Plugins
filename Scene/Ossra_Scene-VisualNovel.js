@@ -2,7 +2,7 @@
 // |||  Scene | Visual Novel (Base)
 // +====================================================================================+
 /*:
- * @plugindesc [0.10A]
+ * @plugindesc [0.13A] Adds a Visual Novel scene.
  * @author Ossra
  *
  * @help
@@ -10,7 +10,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 0.10A [RPG Maker MV 1.6.2]
+ *   - Version : 0.13A [RPG Maker MV 1.6.2]
  *   - Release : 26th November 2019
  *   - Updated : 26th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -886,14 +886,14 @@ Ossra.Command  = Ossra.Command  || [];
   // | [Plugin] Spriteset_VisualNovel
   // +==================================================================================+
 
-    $['Spriteset_VisualNovel'] = function() {
+    function Spriteset_VisualNovel () {
       this.initialize.apply(this, arguments);
     }
+    
+    Spriteset_VisualNovel.prototype = Object.create(Spriteset_Map.prototype);
+    Spriteset_VisualNovel.prototype.constructor = Spriteset_VisualNovel;
 
-    $ = $['Spriteset_VisualNovel'];
-
-    $.prototype = Object.create(Spriteset_Map.prototype);
-    $.prototype.constructor = $;
+    $ = $['Spriteset_VisualNovel'] = Spriteset_VisualNovel;
 
   // NEW -------------------------------------------------------------------------------+
   // | [Method] initialize
@@ -937,6 +937,20 @@ Ossra.Command  = Ossra.Command  || [];
       this.updateWeather();
 
     }; // Spriteset_VisualNovel << update
+    
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] hideCharacters
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.hideCharacters = function() {
+    }; // Spriteset_VisualNovel << hideCharacters
+    
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] showCharacters
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.showCharacters = function() {
+    }; // Spriteset_VisualNovel << showCharacters
 
   })(window);                                                                        // }
 
@@ -1018,7 +1032,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Scene.VisualNovel', 0.10);                                                       // }
+})('Scene.VisualNovel', 0.13);                                                       // }
 
 
 
