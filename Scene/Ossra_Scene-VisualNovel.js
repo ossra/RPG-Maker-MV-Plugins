@@ -2,7 +2,7 @@
 // |||  Scene | Visual Novel (Base)
 // +====================================================================================+
 /*:
- * @plugindesc [0.17A] Adds a Visual Novel scene.
+ * @plugindesc [0.20A] Adds a Visual Novel scene.
  * @author Ossra
  *
  * @help
@@ -10,7 +10,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 0.17A [RPG Maker MV 1.6.2]
+ *   - Version : 0.20A [RPG Maker MV 1.6.2]
  *   - Release : 26th November 2019
  *   - Updated : 27th November 2019
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -36,7 +36,7 @@
  *
  * @param mapLoad
  * @text Load Map
- * @desc 
+ * @desc
  * @parent optionsPluginOptions
  * @type number
  * @default 1
@@ -595,7 +595,7 @@ Ossra.Command  = Ossra.Command  || [];
 
       if (subCommand === 'scene') {
         var sceneId  = Math.max(Number(args[1]), 1);
-        var fadeType = args[2] ? Number(args[1]) : 0;
+        var fadeType = args[2] ? Number(args[2]) : 0;
 
         ossData.sceneId = sceneId;
         $gamePlayer.reserveTransfer(ossData.mapLoad, 0, 0, 2, fadeType);
@@ -680,6 +680,7 @@ Ossra.Command  = Ossra.Command  || [];
 
       this.updateDestination();
       this.updateMainMultiply();
+      this.updateCallMenu();
 
       if (this.isSceneChangeOk()) {
         this.updateScene();
@@ -702,7 +703,7 @@ Ossra.Command  = Ossra.Command  || [];
       Scene_Base.prototype.stop.call(this);
 
       this._mapNameWindow.close();
-      
+
       if (SceneManager.isNextScene(Scene_VisualNovel)) {
         this.fadeOutForTransfer();
       } else {
@@ -829,6 +830,16 @@ Ossra.Command  = Ossra.Command  || [];
       return $gameSystem.isMenuEnabled() && this._waitCount === 0; // && !$gameMap.isEventRunning();
 
     }; // Scene_VisualNovel << isMenuEnabled
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] isMenuCalled
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.isMenuCalled = function() {
+
+      return Input.isTriggered('tab'); // || TouchInput.isCancelled();
+
+    }; // Scene_VisualNovel << isMenuCalled
 
   // NEW -------------------------------------------------------------------------------+
   // | [Method] callMenu
@@ -972,6 +983,22 @@ Ossra.Command  = Ossra.Command  || [];
     var $scn = setNamespace(ossScene, 'Scene_Map');
 
   // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] stop
+  // +----------------------------------------------------------------------------------+
+
+    $scn.stop = $.prototype.stop;
+
+    $.prototype.stop = function() {
+
+      $scn.stop.call(this);
+
+      if (SceneManager.isNextScene(Scene_VisualNovel)) {
+        this.fadeOutForTransfer();
+      }
+
+    }; // Scene_Map << stop
+
+  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updateTransferPlayer
   // +----------------------------------------------------------------------------------+
 
@@ -1047,7 +1074,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Scene.VisualNovel', 0.17);                                                       // }
+})('Scene.VisualNovel', 0.20);                                                       // }
 
 
 
