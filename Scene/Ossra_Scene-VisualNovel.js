@@ -986,6 +986,38 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
+  (function($) {                                                                     // {
+
+  // +=================================================|                     Scene_Load |
+  // | [Plugin] Scene_Load
+  // +==================================================================================+
+
+    var $scn = setNamespace(ossScene, 'Scene_Load');
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] terminate
+  // +----------------------------------------------------------------------------------+
+
+    $scn.onLoadSuccess = $.prototype.onLoadSuccess;
+
+    $.prototype.onLoadSuccess = function() {
+
+      if ($gameMap._mapId === 0) {
+        SoundManager.playLoad();
+        this.fadeOutAll();
+        this.reloadMapIfUpdated();
+        SceneManager.goto(Scene_VisualNovel);
+        this._loadSuccess = true;
+      } else {
+        $scn.onLoadSuccess.call(this);
+      }
+
+    }; // Scene_Load << onLoadSuccess
+
+  })(Scene_Load);                                                                    // }
+
+
+
 })('Scene.VisualNovel', 0.10);                                                       // }
 
 
