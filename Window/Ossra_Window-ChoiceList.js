@@ -2,8 +2,63 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.32] Controls various choice list window options.
+ * @plugindesc [1.37] Controls various choice list window options.
  * @author Ossra
+ *
+ * @help
+ * ==| Plugin Information      |=================================================
+ *
+ *   - Author  : Ossra
+ *   - Contact : garden.of.ossra [at] gmail
+ *   - Version : 1.37 [RPG Maker MV 1.6.2]
+ *   - Release : 11th September 2019
+ *   - Updated : 13th January 2020
+ *   - License : Free for Commercial and Non-Commercial Usage
+ *
+ * ==| Plugin Commands         |=================================================
+ *
+ *  (+) ossra ChoiceList set section property value retain
+ *  (+) ossra ChoiceList set section property,property value,value retain,retain
+ *   |--------------------------------------------------------------------------|
+ *   | Sets one or more properties of the choice list.
+ *   |--------------------------------------------------------------------------|
+ *   | < Name >        < Type >        < Note >
+ *   | section         String          See list below for options.
+ *   | property        String          See list below for options.
+ *   | value           Any             See list below for values.
+ *   | retain          Boolean         Temporarily sets the value as default.
+ *   |--------------------------------------------------------------------------|
+ *
+ *   |--------------------------------------------------------------------------|
+ *   | Section and Property List
+ *   |--------------------------------------------------------------------------|
+ *   | < Name >        < Type >        < Note >
+ *   | window          String
+ *   | | x             Number          X coordinate of the choice window.
+ *   | | y             Number          Y coordinate of the choice window.
+ *   | | ax            Number          X anchor of the choice window.
+ *   | | ay            Number          Y anchor of the choice window.
+ *   | | rows          Number          Number of rows to be displayed.
+ *   | | columns       Number          Number of columns to be displayed.
+ *   |
+ *   | item            String
+ *   | | align         String          Text alignment of items. Value must be
+ *   | |                               in quotations. (e.g. - "center")
+ *   | | spacing       Varies          Spacing between items. If value is
+ *   | |                               numerical, both horizontal and vertical
+ *   | |                               spacing is linked. If value is an
+ *   | |                               array (e.g. - [15,25]), then the
+ *   | |                               horizontal value is the first entry and
+ *   | |                               the vertical value is the second entry.
+ *   | | width         Number          Maximum width of items.
+ *   |--------------------------------------------------------------------------|
+ *
+ *  (+) ossra ChoiceList clear section
+ *  (+) ossra ChoiceList clear section property
+ *  (+) ossra ChoiceList clear section property,property
+ *   |--------------------------------------------------------------------------|
+ *   | Clears the specified properties of the choice list.
+ *   |--------------------------------------------------------------------------|
  *
  * @param defaultProperties
  * @text Default Properties
@@ -33,60 +88,9 @@
  * @desc Global identification tag for internal use only. Do not edit.
  * @type text
  * @default ossra-bbCPaTCrLPwH6ow
- *
- * @help
- * ==| Plugin Information      |=================================================
- *
- *   - Author  : Ossra
- *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.32
- *   - Release : 11th September 2019
- *   - Updated : 30th September 2019
- *   - License : Free for Commercial and Non-Commercial Usage
- *
- * ==| Plugin Commands         |=================================================
- *
- *  (+) ossra ChoiceList set section property value retain
- *  (+) ossra ChoiceList set section property,property value,value retain,retain
- *   |--------------------------------------------------------------------------|
- *   | Sets one or more properties of the choice list.
- *   |--------------------------------------------------------------------------|
- *   | < Name >        < Type >        < Note >
- *   | section         String          See list below for options.
- *   | property        String          See list below for options.
- *   | value           Any             See list below for values.
- *   | retain          Boolean         Temporarily sets the value as default.
- *   |--------------------------------------------------------------------------|
- *
- *   |--------------------------------------------------------------------------|
- *   | Section and Property List
- *   |--------------------------------------------------------------------------|
- *   | < Name >        < Type >        < Note >
- *   | window          String
- *   | | x             Number          X coordinate of the choice window.
- *   | | y             Number          Y coordinate of the choice window.
- *   | | rows          Number          Number of rows to be displayed.
- *   | | columns       Number          Number of columns to be displayed.
- *   |
- *   | item            String
- *   | | align         String          Text alignment of items. Value must be
- *   | |                               in quotations. (e.g. - "center")
- *   | | spacing       Varies          Spacing between items. If value is 
- *   | |                               numerical, both horizontal and vertical
- *   | |                               spacing is linked. If value is an
- *   | |                               array (e.g. - [15,25]), then the
- *   | |                               horizontal value is the first entry and
- *   | |                               the vertical value is the second entry.
- *   | | width         Number          Maximum width of items.
- *   |--------------------------------------------------------------------------|
- *
- *  (+) ossra ChoiceList clear section
- *  (+) ossra ChoiceList clear section property
- *  (+) ossra ChoiceList clear section property,property
- *   |--------------------------------------------------------------------------|
- *   | Clears the specified properties of the choice list.
- *   |--------------------------------------------------------------------------|
  */
+// +===================================================|                        Structs |
+// | [Plugin] Structs
 // +====================================================================================+
  /*~struct~optionsWindow:
  * @param x
@@ -100,6 +104,20 @@
  * @desc The y coordinate of the choice window. Negative values are accepted.
  * @type number
  * @min -9999999
+ *
+ * @param ax
+ * @text X Anchor
+ * @desc The x anchor of the choice window.
+ * @type number
+ * @decimals 1
+ * @max 1
+ *
+ * @param ay
+ * @text Y Anchor
+ * @desc The y anchor of the choice window.
+ * @type number
+ * @decimals 1
+ * @max 1
  *
  * @param rows
  * @text Rows
@@ -210,17 +228,36 @@ Ossra.Command  = Ossra.Command  || [];
 
   (function($) {                                                                     // {
 
-  // +=================================================|                      Functions |
-  // | [Plugin] Functions
+  // +=================================================|              Ossra_ChoiceStyle |
+  // | [Object] Ossra_ChoiceStyle
   // +==================================================================================+
 
+    $.Ossra_ChoiceStyle = function () {
+      this.initialize.apply(this, arguments);
+    }
+
+    $ = $.Ossra_ChoiceStyle;
+
+    $.prototype = Object.create(Object.prototype);
+    $.prototype.constructor = $;
+
   // +----------------------------------------------------------------------------------+
-  // | [Method] Ossra_ChoiceStyle
+  // | [Method] initialize
   // +----------------------------------------------------------------------------------+
 
-    $.Ossra_ChoiceStyle = function () {
-      this._data    = { };
-      this._default = {
+    $.prototype.initialize = function() {
+
+      this._data = { };
+
+    }; // Ossra_ChoiceStyle << initialize
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] defaultData
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.defaultData = function() {
+
+      return {
         value: null,
         enabled: false,
         retain: false,
@@ -232,54 +269,85 @@ Ossra.Command  = Ossra.Command  || [];
         }
       };
 
-      this.add = function (section, property, defaults) {
-        if (!this._data[section]) this._data[section] = { };
+    }; // Ossra_ChoiceStyle << defaultData
 
-        this._data[section][property] = Object.assign({}, this._default);
+  // +----------------------------------------------------------------------------------+
+  // | [Method] add
+  // +----------------------------------------------------------------------------------+
 
-        if (defaults && typeof defaults !== 'undefined') {
-          this.set(section, property, defaults, true, true, defaults);
+    $.prototype.add = function(section, property, defaults) {
+
+      if (!this._data[section]) this._data[section] = { };
+
+      this._data[section][property] = Object.assign({}, this.defaultData());
+
+      if (defaults && typeof defaults !== 'undefined') {
+        this.set(section, property, defaults, true, true, defaults);
+      }
+
+    }; // Ossra_ChoiceStyle << add
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] get
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.get = function(section, property) {
+
+      if (typeof property !== 'undefined') {
+        return this._data[section][property];
+      } else {
+        return this._data[section];
+      }
+
+    }; // Ossra_ChoiceStyle << get
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] set
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.set = function(section, property, value, enabled, retain, defaults) {
+
+      this._data[section][property].value   = value;
+      this._data[section][property].enabled = enabled || false;
+      this._data[section][property].retain  = retain  || false;
+
+      if (defaults) {
+        this._data[section][property]._default = defaults;
+      }
+
+    }; // Ossra_ChoiceStyle << set
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] clear
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.clear = function(section, property, force) {
+
+      if (typeof property !== 'undefined') {
+        if (!this._data[section][property].retain || force) {
+          this._data[section][property].clear();
         }
-      };
-
-      this.get = function (section, property) {
-        if (typeof property !== 'undefined') {
-          return this._data[section][property];
-        } else {
-          return this._data[section];
-        }
-      };
-
-      this.set = function (section, property, value, enabled, retain, defaults) {
-        this._data[section][property].value   = value;
-        this._data[section][property].enabled = enabled || false;
-        this._data[section][property].retain  = retain  || false;
-
-        if (defaults) {
-          this._data[section][property]._default = defaults;
-        }
-      };
-
-      this.clear = function (section, property, force) {
-        if (typeof property !== 'undefined') {
-          if (!this._data[section][property].retain || force) {
-            this._data[section][property].clear();
+      } else {
+        Object.keys(this._data[section]).forEach(function(key) {
+          if (!this._data[section][key].retain || force) {
+            this._data[section][key].clear();
           }
-        } else {
-          Object.keys(this._data[section]).forEach(function(key) {
-            if (!this._data[section][key].retain || force) {
-              this._data[section][key].clear();
-            }
-          }, this);
-        }
-      };
-
-      this.reset = function () {
-        Object.keys(this._data).forEach(function(key) {
-          this.clear(key);
         }, this);
-      };
-    }; // Functions << Ossra_ChoiceStyle
+      }
+
+    }; // Ossra_ChoiceStyle << clear
+
+  // +----------------------------------------------------------------------------------+
+  // | [Method] reset
+  // +----------------------------------------------------------------------------------+
+
+    $.prototype.reset = function() {
+
+      Object.keys(this._data).forEach(function(key) {
+        this.clear(key);
+      }, this);
+
+    }; // Ossra_ChoiceStyle << reset
 
   })(ossObject);                                                                     // }
 
@@ -358,13 +426,15 @@ Ossra.Command  = Ossra.Command  || [];
   // +==================================================================================+
 
   // +----------------------------------------------------------------------------------+
-  // | [Setup] Create Defaults
+  // | [Setup] Set Defaults
   // +----------------------------------------------------------------------------------+
 
     var ossDefaults = {
       'window': {
         'x': null,
         'y': null,
+        'ax': null,
+        'ay': null,
         'rows': null,
         'columns': null
       },
@@ -389,6 +459,8 @@ Ossra.Command  = Ossra.Command  || [];
 
     ossData.style.add('window', 'x', ossConfig.window.x);
     ossData.style.add('window', 'y', ossConfig.window.y);
+    ossData.style.add('window', 'ax', ossConfig.window.ax);
+    ossData.style.add('window', 'ay', ossConfig.window.ay);
     ossData.style.add('window', 'rows', ossConfig.window.rows);
     ossData.style.add('window', 'columns', ossConfig.window.columns);
 
@@ -514,7 +586,7 @@ Ossra.Command  = Ossra.Command  || [];
   (function($) {                                                                     // {
 
   // +=================================================|              Window_ChoiceList |
-  // | [Plugin] Window_ChoiceList
+  // | [Window] Window_ChoiceList
   // +==================================================================================+
 
     var $win = setNamespace(ossWindow, 'Window_ChoiceList');
@@ -538,6 +610,14 @@ Ossra.Command  = Ossra.Command  || [];
 
       if (style.y.enabled) {
         this.y = style.y.value;
+      }
+
+      if (style.ax.enabled) {
+        this.pivot.x = style.ax.value * this.width / this.scale.x;
+      }
+
+      if (style.ay.enabled) {
+        this.pivot.y = style.ay.value * this.height / this.scale.y;
       }
 
     }; // Window_ChoiceList << updatePlacement
@@ -770,7 +850,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Window.ChoiceList', 1.32);                                                       // }
+})('Window.ChoiceList', 1.37);                                                       // }
 
 
 
