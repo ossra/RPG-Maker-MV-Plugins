@@ -2,7 +2,7 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.37] Controls various choice list window options.
+ * @plugindesc [1.39] Controls various choice list window options.
  * @author Ossra
  *
  * @help
@@ -10,9 +10,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.37 [RPG Maker MV 1.6.2]
+ *   - Version : 1.39 [RPG Maker MV 1.6.2]
  *   - Release : 11th September 2019
- *   - Updated : 13th January 2020
+ *   - Updated : 16th January 2020
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
@@ -593,6 +593,38 @@ Ossra.Command  = Ossra.Command  || [];
     var _fnc = setNamespace(ossFunc, 'Window_ChoiceList');
 
   // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] canvasToLocalX
+  // +----------------------------------------------------------------------------------+
+
+    $win.canvasToLocalX = $.prototype.canvasToLocalX;
+
+    $.prototype.canvasToLocalX = function(x) {
+
+      var style = ossData.style.get('window');
+
+      x = $win.canvasToLocalX.call(this, x);
+
+      return style.ax.enabled ? this.pivot.x + x : x;
+
+    }; // Window_ChoiceList << canvasToLocalX
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] canvasToLocalY
+  // +----------------------------------------------------------------------------------+
+
+    $win.canvasToLocalY = $.prototype.canvasToLocalY;
+
+    $.prototype.canvasToLocalY = function(y) {
+
+      var style = ossData.style.get('window');
+
+      y = $win.canvasToLocalY.call(this, y);
+
+      return style.ay.enabled ? this.pivot.y + y : y;
+
+    }; // Window_ChoiceList << canvasToLocalY
+
+  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] updatePlacement
   // +----------------------------------------------------------------------------------+
 
@@ -850,7 +882,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Window.ChoiceList', 1.37);                                                       // }
+})('Window.ChoiceList', 1.39);                                                       // }
 
 
 
