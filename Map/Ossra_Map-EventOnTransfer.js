@@ -2,7 +2,7 @@
 // |||  Map | Event On Transfer
 // +====================================================================================+
 /*:
- * @plugindesc [1.20] Run a specified common event when entering or exiting a map.
+ * @plugindesc [1.25] Run a specified common event when entering or exiting a map.
  * @author Ossra
  *
  * @help
@@ -10,9 +10,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.20 [RPG Maker MV 1.6.2]
+ *   - Version : 1.25 [RPG Maker MV 1.6.2]
  *   - Release : 6th July 2016
- *   - Updated : 22nd November 2019
+ *   - Updated : 16th January 2020
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * @param headerPluginOptions
@@ -264,7 +264,7 @@ Ossra.Command  = Ossra.Command  || [];
 
     $obj.setup = $.prototype.setup;
 
-    Game_Map.prototype.setup = function(mapId) {
+    $.prototype.setup = function(mapId) {
 
       _fnc.resetTransferEvents();
       _fnc.setupNote();
@@ -275,6 +275,19 @@ Ossra.Command  = Ossra.Command  || [];
         var enterEvent = $dataCommonEvents[ossData.enterEventId];
 
         if (enterEvent) {
+          if (this.hasOwnProperty('__interpreter')) {
+            var length  = enterEvent.list.length;
+            var command = { };
+            var script  = `$gameMap._interpreter = $gameMap.__interpreter;
+                           delete $gameMap.__interpreter;`;
+
+            command.code       = 355;
+            command.indent     = 0;
+            command.parameters = [ script ];
+
+            enterEvent.list.splice(length - 1, 0, command);
+          }
+
           this._interpreter.setup(enterEvent.list);
         }
       }
@@ -353,7 +366,15 @@ Ossra.Command  = Ossra.Command  || [];
           var exitEvent = $dataCommonEvents[ossData.exitEventId];
 
           if (exitEvent) {
+            if ($gameMap._interpreter.isRunning()) {
+              var backup      = JsonEx.stringify($gameMap._interpreter);
+              var interpreter = JsonEx.parse(backup);
+
+              $gameMap.__interpreter = interpreter;
+            }
+
             $gameMap._interpreter.setup(exitEvent.list);
+
             ossData.runEvent = true;
           } else {
             ossData.exitEventId = 0;
@@ -374,7 +395,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Map.EventOnTransfer', 1.20);                                                     // }
+})('Map.EventOnTransfer', 1.25);                                                     // }
 
 
 
