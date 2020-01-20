@@ -2,7 +2,7 @@
 // |||  Window | Choice List
 // +====================================================================================+
 /*:
- * @plugindesc [1.39] Controls various choice list window options.
+ * @plugindesc [1.42] Controls various choice list window options.
  * @author Ossra
  *
  * @help
@@ -10,9 +10,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.39 [RPG Maker MV 1.6.2]
+ *   - Version : 1.42 [RPG Maker MV 1.6.2]
  *   - Release : 11th September 2019
- *   - Updated : 16th January 2020
+ *   - Updated : 20th January 2020
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * ==| Plugin Commands         |=================================================
@@ -51,6 +51,10 @@
  *   | |                               horizontal value is the first entry and
  *   | |                               the vertical value is the second entry.
  *   | | width         Number          Maximum width of items.
+ *   |
+ *   | trim            String
+ *   | | rows          Boolean         Trim rows to fit number of list items.
+ *   | | columns       Boolean         Trim columns to fit number of list items.
  *   |--------------------------------------------------------------------------|
  *
  *  (+) ossra ChoiceList clear section
@@ -76,6 +80,12 @@
  * @parent defaultProperties
  * @desc The default properties of each option on the choice list window.
  * @type struct<optionsItem>
+ *
+ * @param trim
+ * @text Trim
+ * @parent defaultProperties
+ * @desc The default trim actions for the choice list window.
+ * @type struct<optionsTrim>
  *
  * @param pluginData
  * @text Plugin Data
@@ -148,6 +158,19 @@
  * @text Spacing
  * @desc The spacing between each choice option. Value is in pixels.
  * @type number
+ */
+ /*~struct~optionsTrim:
+ * @param rows
+ * @text Rows
+ * @desc Trim the number of rows to fit the number of list items.
+ * @type boolean
+ * @default true
+ *
+ * @param columns
+ * @text Columns
+ * @desc Trim the number of columns to fit the number of list items.
+ * @type boolean
+ * @default true
  */
 // +====================================================================================+
 
@@ -430,6 +453,7 @@ Ossra.Command  = Ossra.Command  || [];
   // +----------------------------------------------------------------------------------+
 
     var ossDefaults = {
+
       'window': {
         'x': null,
         'y': null,
@@ -442,7 +466,12 @@ Ossra.Command  = Ossra.Command  || [];
         'textAlign': null,
         'width': null,
         'spacing': null
+      },
+      'trim': {
+        'rows': true,
+        'columns': true
       }
+
     }
 
   // +----------------------------------------------------------------------------------+
@@ -467,6 +496,9 @@ Ossra.Command  = Ossra.Command  || [];
     ossData.style.add('item', 'align', ossConfig.item.textAlign);
     ossData.style.add('item', 'width', ossConfig.item.width);
     ossData.style.add('item', 'spacing', ossConfig.item.spacing);
+
+    ossData.style.add('trim', 'rows', ossConfig.trim.rows);
+    ossData.style.add('trim', 'columns', ossConfig.trim.columns);
 
   })();                                                                              // }
 
@@ -665,6 +697,18 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('window', 'rows');
 
       if (style.enabled) {
+        var trim = ossData.style.get('trim', 'rows');
+
+        if (trim.enabled) {
+          var columns  = this.maxCols();
+          var maxItems = $gameMessage.choices().length;
+          var maxLines = Math.ceil(maxItems / columns);
+
+          if (maxLines < style.value) {
+            return maxLines;
+          }
+        }
+
         return style.value;
       } else {
         return $win.numVisibleRows.call(this);
@@ -683,6 +727,17 @@ Ossra.Command  = Ossra.Command  || [];
       var style = ossData.style.get('window', 'columns');
 
       if (style.enabled) {
+        var trim = ossData.style.get('trim', 'columns');
+
+        if (trim.enabled) {
+          var maxItems = $gameMessage.choices().length;
+          var maxLines = Math.ceil(maxItems / style.value);
+
+          if (maxLines === 1) {
+            return maxItems;
+          }
+        }
+
         return style.value;
       } else {
         return $win.maxCols.call(this);
@@ -882,7 +937,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Window.ChoiceList', 1.39);                                                       // }
+})('Window.ChoiceList', 1.42);                                                       // }
 
 
 
