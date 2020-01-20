@@ -585,6 +585,7 @@ Ossra.Command  = Ossra.Command  || [];
           }
         }
       } catch(error) {
+        console.log(error);
         return;
       }
 
@@ -699,7 +700,7 @@ Ossra.Command  = Ossra.Command  || [];
       if (style.enabled) {
         var trim = ossData.style.get('trim', 'rows');
 
-        if (trim.enabled) {
+        if (trim.enabled && trim.value) {
           var columns  = this.maxCols();
           var maxItems = $gameMessage.choices().length;
           var maxLines = Math.ceil(maxItems / columns);
@@ -729,7 +730,7 @@ Ossra.Command  = Ossra.Command  || [];
       if (style.enabled) {
         var trim = ossData.style.get('trim', 'columns');
 
-        if (trim.enabled) {
+        if (trim.enabled && trim.value) {
           var maxItems = $gameMessage.choices().length;
           var maxLines = Math.ceil(maxItems / style.value);
 
