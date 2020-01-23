@@ -2,7 +2,7 @@
 // |||  Character | Stage Manager
 // +====================================================================================+
 /*:
- * @plugindesc [0.37A] Adds various options for controlling the move route of events.
+ * @plugindesc [0.42A] Adds various options for controlling the move route of events.
  * @author Ossra
  *
  * @param Plugin Data
@@ -20,7 +20,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 0.37A
+ *   - Version : 0.42A
  *   - Release : 18th September 2019
  *   - Updated : 22nd January 2020
  *   - License : Free for Commercial and Non-Commercial Usage
@@ -171,10 +171,6 @@ Ossra.Command  = Ossra.Command  || [];
         this._moveRouteIndex -= 1;
         this._waitCount = 1;
       } else  {
-        if (!this._moveRoute.repeat) {
-          _fnc.processRouteCleanUp.call(this);
-        }
-
         $obj.processRouteEnd.call(this);
       }
 
@@ -196,8 +192,14 @@ Ossra.Command  = Ossra.Command  || [];
 
         for (var i = 0; i < targets.length; i++) {
           var targetId = targets[i];
+          var target   = null;
 
-          var target   = $gameMap._interpreter.character(targetId);
+          if (targetId < 0) {
+              target   = $gamePlayer;
+              targetId = -1;
+          } else {
+              target   = $gameMap.event(targetId);
+          }
 
           var list     = JsonEx.makeDeepCopy(this._moveRoute.list);
           list         = list.slice(baseIndex, baseIndex + amount);
@@ -216,22 +218,22 @@ Ossra.Command  = Ossra.Command  || [];
 
       if (line[0] === 'callback') {
         var targetId = Number(line[1]);
-        var eventId  = null;
-        var target   = null;
+        var target   = { id: 0, object: null };
+        var eventId  = this._eventId;
 
         if (targetId < 0) {
-            target = $gamePlayer;
-            eventId = -1;
+            target.id     = -1;
+            target.object = $gamePlayer;
         } else {
-            target = $gameMap.event(targetId);
-            eventId = targetId;
+            target.id     = targetId;
+            target.object = $gameMap.event(targetId);
         }
 
-        if (target) {
-          var index = target.__waitOn.indexOf(eventId);
+        if (target.object) {
+          var index = target.object.__waitOn.indexOf(eventId);
 
           if (index > -1) {
-            target.__waitOn.splice(index - 1, 1);
+            target.object.__waitOn.splice(index, 1);
           }
         }
       }
@@ -257,23 +259,11 @@ Ossra.Command  = Ossra.Command  || [];
 
     }; // Game_Character << createRoute
 
-  // NEW -------------------------------------------------------------------------------+
-  // | [Method] processRouteCleanUp
-  // +----------------------------------------------------------------------------------+
-
-    _fnc.processRouteCleanUp = function() {
-
-      this._moveRoute.list = this._moveRoute.list.filter(function(command) {
-        return !command.remove;
-      });
-
-    }; // Game_Character << processRouteCleanUp
-
   })(Game_Character);                                                                // }
 
 
 
-})('Character.StageManager', 0.37);                                                  // }
+})('Character.StageManager', 0.42);                                                  // }
 
 
 
