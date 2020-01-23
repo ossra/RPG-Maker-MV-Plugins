@@ -273,7 +273,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Character.StageManager', 0.37A);                                                 // }
+})('Character.StageManager', 0.37);                                                  // }
 
 
 
