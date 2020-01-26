@@ -2,7 +2,7 @@
 // |||  Scene | Conditional Title Music
 // +====================================================================================+
 /*:
- * @plugindesc [1.15] Conditionally play specified audio files on the title screen.
+ * @plugindesc [1.17] Conditionally play specified audio files on the title screen.
  * @author Ossra
  *
  * @help
@@ -10,9 +10,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.15 [RPG Maker MV 1.6.2]
+ *   - Version : 1.17 [RPG Maker MV 1.6.2]
  *   - Release : 25th July 2016
- *   - Updated : 15th January 2020
+ *   - Updated : 26th January 2020
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * @param optionsPluginOptions
@@ -46,6 +46,11 @@
  * @text File List
  * @desc The list of audio files to be played.
  * @type struct<optionsParameters>[]
+ *
+ * @param event
+ * @text Event List
+ * @desc The list of common events to be executed.
+ * @type common_event[]
  *
  * @param playIf__evalCondition
  * @text Play Condition
@@ -308,6 +313,10 @@ Ossra.Command  = Ossra.Command  || [];
               'pos': 0
             }
           ],
+          'event':
+          [
+            0
+          ],
           'playIf': ossFunc.evalCondition('false')
         }
       ]
@@ -334,6 +343,30 @@ Ossra.Command  = Ossra.Command  || [];
     var _fnc = setNamespace(ossFunc, 'Scene_Title');
 
   // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] create
+  // +----------------------------------------------------------------------------------+
+
+    $scn.create = $.prototype.create;
+
+    $.prototype.create = function() {
+
+      _fnc.createInterpreter.call(this);
+
+      $scn.create.call(this);
+
+    }; // Scene_Title << create
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] createInterpreter
+  // +----------------------------------------------------------------------------------+
+
+    _fnc.createInterpreter = function() {
+
+      this.__interpreter = [];
+
+    }; // Scene_Title << createInterpreter
+
+  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] playTitleMusic
   // +----------------------------------------------------------------------------------+
 
@@ -343,11 +376,41 @@ Ossra.Command  = Ossra.Command  || [];
 
       AudioManager.stopAll();
 
-      if (_fnc.checkTitleMusic()) {
+      if (_fnc.checkTitleMusic.call(this)) {
         $scn.playTitleMusic.call(this);
       }
 
     }; // Scene_Title << playTitleMusic
+
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] update
+  // +----------------------------------------------------------------------------------+
+
+    $scn.update = $.prototype.update;
+
+    $.prototype.update = function() {
+
+      $scn.update.call(this);
+
+      _fnc.updateInterpreter.call(this);
+
+    }; // Scene_Title << update
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] updateInterpreter
+  // +----------------------------------------------------------------------------------+
+
+    _fnc.updateInterpreter = function() {
+
+      if (this.__interpreter.length > 0) {
+        for (var i = 0; i < this.__interpreter.length; i++) {
+          if (this.__interpreter[i].isRunning()) {
+            this.__interpreter[i].update();
+          }
+        }
+      }
+
+    }; // Scene_Title << updateInterpreter
 
   // ALIAS -----------------------------------------------------------------------------+
   // | [Method] terminate
@@ -373,7 +436,8 @@ Ossra.Command  = Ossra.Command  || [];
         var list = ossConfig.list[id];
 
         if (list.playIf()) {
-          _fnc.playMusicList(list.audio);
+          _fnc.runMusicEvent.call(this, list.event);
+          _fnc.playMusicList.call(this, list.audio);
 
           return false;
         }
@@ -382,6 +446,27 @@ Ossra.Command  = Ossra.Command  || [];
       return true;
 
     }; // Scene_Title << checkTitleMusic
+
+  // NEW -------------------------------------------------------------------------------+
+  // | [Method] runMusicEvent
+  // +----------------------------------------------------------------------------------+
+
+    _fnc.runMusicEvent = function(list) {
+
+      for (var id = 0; id < list.length; id++) {
+        var eventId     = list[id];
+        var event       = $dataCommonEvents[eventId];
+
+        if (event) {
+          var interpreter = new Game_Interpreter();
+
+          interpreter.setup(event.list);
+
+          this.__interpreter.push(interpreter);
+        }
+      }
+
+    }; // Scene_Title << runMusicEvent
 
   // NEW -------------------------------------------------------------------------------+
   // | [Method] playMusicList
@@ -414,7 +499,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Scene.ConditionalTitleMusic', 1.15);                                             // }
+})('Scene.ConditionalTitleMusic', 1.17);                                             // }
 
 
 
