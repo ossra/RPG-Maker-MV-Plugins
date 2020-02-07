@@ -2,7 +2,7 @@
 // |||  Map | Event On Transfer
 // +====================================================================================+
 /*:
- * @plugindesc [1.25] Run a specified common event when entering or exiting a map.
+ * @plugindesc [1.27] Run a specified common event when entering or exiting a map.
  * @author Ossra
  *
  * @help
@@ -10,9 +10,9 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.25 [RPG Maker MV 1.6.2]
+ *   - Version : 1.27 [RPG Maker MV 1.6.2]
  *   - Release : 6th July 2016
- *   - Updated : 16th January 2020
+ *   - Updated : 6th February 2020
  *   - License : Free for Commercial and Non-Commercial Usage
  *
  * @param headerPluginOptions
@@ -259,6 +259,20 @@ Ossra.Command  = Ossra.Command  || [];
     var _fnc = setNamespace(ossFunc, 'Game_Map');
 
   // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] initialize
+  // +----------------------------------------------------------------------------------+
+
+    $obj.initialize = $.prototype.initialize;
+
+    $.prototype.initialize = function() {
+
+      $obj.initialize.call(this);
+      
+      this.__interpreter = null;
+
+    }; // Game_Map << initialize
+
+  // ALIAS -----------------------------------------------------------------------------+
   // | [Method] setup
   // +----------------------------------------------------------------------------------+
 
@@ -272,14 +286,14 @@ Ossra.Command  = Ossra.Command  || [];
       $obj.setup.call(this, mapId);
 
       if ($gamePlayer.newMapId() == $gameMap.mapId() && ossData.enterEventId > 0) {
-        var enterEvent = $dataCommonEvents[ossData.enterEventId];
+        var enterEvent = JsonEx.makeDeepCopy($dataCommonEvents[ossData.enterEventId]);
 
         if (enterEvent) {
-          if (this.hasOwnProperty('__interpreter')) {
+          if (this.__interpreter !== null) {
             var length  = enterEvent.list.length;
             var command = { };
             var script  = `$gameMap._interpreter = $gameMap.__interpreter;
-                           delete $gameMap.__interpreter;`;
+                           $gameMap.__interpreter = null;`;
 
             command.code       = 355;
             command.indent     = 0;
@@ -289,6 +303,13 @@ Ossra.Command  = Ossra.Command  || [];
           }
 
           this._interpreter.setup(enterEvent.list);
+        }
+      }
+
+      if ($gamePlayer.newMapId() == $gameMap.mapId() && ossData.enterEventId == 0) {
+        if (this.__interpreter !== null) {
+          $gameMap._interpreter = $gameMap.__interpreter;
+          $gameMap.__interpreter = null;
         }
       }
 
@@ -367,8 +388,7 @@ Ossra.Command  = Ossra.Command  || [];
 
           if (exitEvent) {
             if ($gameMap._interpreter.isRunning()) {
-              var backup      = JsonEx.stringify($gameMap._interpreter);
-              var interpreter = JsonEx.parse(backup);
+              var interpreter = JsonEx.makeDeepCopy($gameMap._interpreter);
 
               $gameMap.__interpreter = interpreter;
             }
@@ -395,7 +415,7 @@ Ossra.Command  = Ossra.Command  || [];
 
 
 
-})('Map.EventOnTransfer', 1.25);                                                     // }
+})('Map.EventOnTransfer', 1.27);                                                     // }
 
 
 
