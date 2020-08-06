@@ -2,7 +2,7 @@
 // |||  Character | Transform Vehicle
 // +====================================================================================+
 /*:
- * @plugindesc [1.00] Changes the graphic of a vehicle when driving.
+ * @plugindesc [1.01] Changes the graphic of a vehicle when driving.
  * @author Ossra
  *
  * @help
@@ -10,7 +10,7 @@
  *
  *   - Author  : Ossra
  *   - Contact : garden.of.ossra [at] gmail
- *   - Version : 1.00 | RPG Maker MB 1.6.2
+ *   - Version : 1.01 | RPG Maker MB 1.6.2
  *   - Release : 5th August 2020
  *   - Updated : 5th August 2020
  *   - License : MIT [https://opensource.org/licenses/MIT]
@@ -277,19 +277,41 @@ Ossra.Plugin   = Ossra.Plugin   || {};
 
     _.prototype.getOff = function () {
 
-      var vehicle = this.vehicle();
+      if (this._type !== 'airship') {
+        var vehicle = this.vehicle();
 
-      this.setImage(vehicle.characterName, vehicle.characterIndex);
+        this.setImage(vehicle.characterName, vehicle.characterIndex);
+      }
 
       _alias.getOff.call(this);
 
     }; // Game_Vehicle << getOff
 
+  // ALIAS -----------------------------------------------------------------------------+
+  // | [Method] update
+  // +----------------------------------------------------------------------------------+
+
+    _alias.update = _.prototype.update;
+
+    _.prototype.update = function () {
+
+      if (this._type === 'airship') {
+        if (this._altitude === 0 && this._driving === false) {
+          var vehicle = this.vehicle();
+
+          this.setImage(vehicle.characterName, vehicle.characterIndex);
+        }
+      }
+
+      _alias.update.call(this);
+
+    }; // Game_Vehicle << update
+
   })(Game_Vehicle);                                                                  // }
 
 
 
-})('Character.TransformVehicle', 1.00);                                              // }
+})('Character.TransformVehicle', 1.01);                                              // }
 
 
 
